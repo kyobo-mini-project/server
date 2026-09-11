@@ -21,7 +21,7 @@
 | --- | --- | --- |
 | 박상희 | 팀장 | [Sangddong](https://github.com/Sangddong) |
 | 김주형 | 팀원 | [jjang-gu-kim](https://github.com/jjang-gu-kim) |
-| 김지민 | 팀원 |  |
+| 김지민 | 팀원 | [duke1327](https://github.com/duke1327) |
 | 이광호 | 팀원 | [danielleee1128](https://github.com/danielleee1128) |
 | 이정희 | 팀원 | [LJH0-0](https://github.com/LJH0-0) |
 
