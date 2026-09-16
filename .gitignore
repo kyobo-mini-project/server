@@ -9,3 +9,6 @@ build
 
 # Ignore .env
 .env
+
+#Ignore .idea
+.idea
