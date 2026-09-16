@@ -3,6 +3,8 @@
 
 [versions]
 guava = "33.5.0-jre"
+postgresql = "42.7.13"
 
 [libraries]
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
