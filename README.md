@@ -36,8 +36,17 @@
 ---
 ## 🛠 기술 스택
 #### Backend
+- Java 21
+- Gradle
+- MyBatis 3.5.19
+- 콘솔 애플리케이션 (Spring 미사용)
+
 #### Database
+- PostgreSQL (Neon)
+- JDBC Driver `org.postgresql:postgresql`
+
 #### Deploy
+- 로컬 실행 (`./gradlew run`)
 ---
 ## 📋 프로젝트 관리
 

@@ -12,3 +12,9 @@ build
 
 #Ignore .idea
 .idea
+
+# Eclipse / VS Code Java classpath (local)
+.classpath
+.project
+.settings/
+bin/
