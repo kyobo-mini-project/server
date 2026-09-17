@@ -67,7 +67,7 @@ public class ConsoleController {
         while (programRunning && currentUser != null) {
             try {
                 System.out.println("원하시는 기능을 선택해주세요. (" + currentUser.getName() + "님)");
-                System.out.println("[1. 영화 목록 조회] [2. 예매하기] [3. 예매 내역] [4. 로그아웃] [0. 종료]");
+                System.out.println("[1. 영화 목록 조회] [2. 예매 내역] [3. 로그아웃] [0. 종료]");
                 int selected = readInt("기능 선택: ");
                 switch (selected) {
                     case 1:
