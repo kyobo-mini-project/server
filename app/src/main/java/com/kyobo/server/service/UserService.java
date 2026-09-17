@@ -46,6 +46,28 @@ public class UserService {
         }
     }
 
+    public User signIn(String loginId, String password) {
+        requireNotBlank(loginId, "아이디");
+        requireNotBlank(password, "비밀번호");
+
+        String trimmedLoginId = loginId.trim();
+
+        try (SqlSession session = MyBatisConfig.sqlSessionFactory().openSession()) {
+            UserMapper mapper = session.getMapper(UserMapper.class);
+            User user = mapper.findByLoginId(trimmedLoginId);
+
+            // BCrypt는 호출마다 해시가 달라지므로 DB에서 비밀번호로 직접 조회하면 안 됨
+            if (user == null || !FieldEncryptor.matchesPassword(password, user.getUserPw())) {
+                throw new IllegalStateException("아이디 또는 비밀번호를 확인해주세요.");
+            }
+
+            user.setName(FieldEncryptor.decrypt(user.getName()));
+            user.setPhoneNumber(FieldEncryptor.decrypt(user.getPhoneNumber()));
+            user.setUserPw(null);
+            return user;
+        }
+    }
+
     private static void requireNotBlank(String value, String fieldName) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(fieldName + "을(를) 입력해 주세요.");

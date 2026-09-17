@@ -82,6 +82,42 @@ public class UserController {
         }
     }
 
+    /**
+     * @return 로그인 성공한 사용자 (이름은 복호화된 평문)
+     */
+    public User runSignIn() {
+        System.out.println("===========================================================");
+        System.out.println("로그인");
+        System.out.println("-----------------------------------------------------------");
+
+        String loginId = readLine("[ID] : ");
+        String password = readLine("[PASSWORD] : ");
+        System.out.println("===========================================================");
+
+        while (true) {
+            if (isBlank(loginId)) {
+                System.out.println("아이디를 입력해 주세요.");
+                loginId = readLine("[ID] : ");
+                continue;
+            }
+            if (isBlank(password)) {
+                System.out.println("비밀번호를 입력해 주세요.");
+                password = readLine("[PASSWORD] : ");
+                continue;
+            }
+
+            try {
+                User user = userService.signIn(loginId, password);
+                System.out.println("로그인 성공! 환영합니다, " + user.getName() + "님!");
+                return user;
+            } catch (IllegalStateException e) {
+                System.out.println(e.getMessage() + " 다시 입력해 주세요.");
+                loginId = readLine("[ID] : ");
+                password = readLine("[PASSWORD] : ");
+            }
+        }
+    }
+
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
     }

@@ -3,10 +3,13 @@ package com.kyobo.server.controller;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
+import com.kyobo.server.entity.User;
+
 public class ConsoleController {
     private final Scanner scanner;
     private final UserController userController;
     private boolean programRunning = true;
+    private User currentUser;
 
     public ConsoleController(Scanner scanner) {
         this.scanner = scanner;
@@ -36,8 +39,8 @@ public class ConsoleController {
                         System.out.println("영화 목록 조회 구현 필요");
                         break;
                     case 2:
-                        // TODO: 로그인 구현 후 수정
-                        System.out.println("로그인 구현 필요");
+                        currentUser = userController.runSignIn();
+                        runUserHome();
                         break;
                     case 3:
                         if (!userController.runSignUp()) {
@@ -60,9 +63,48 @@ public class ConsoleController {
         }
     }
 
+    private void runUserHome() {
+        while (programRunning && currentUser != null) {
+            try {
+                System.out.println("원하시는 기능을 선택해주세요. (" + currentUser.getName() + "님)");
+                System.out.println("[1. 영화 목록 조회] [2. 예매하기] [3. 예매 내역] [4. 로그아웃] [0. 종료]");
+                int selected = readInt("기능 선택: ");
+                switch (selected) {
+                    case 1:
+                        // TODO: 영화 목록 조회 구현 후 수정
+                        System.out.println("영화 목록 조회 구현 필요");
+                        break;
+                    case 2:
+                        // TODO: 예매하기 구현 후 수정
+                        System.out.println("예매하기 구현 필요");
+                        break;
+                    case 3:
+                        // TODO: 예매 내역 구현 후 수정
+                        System.out.println("예매 내역 구현 필요");
+                        break;
+                    case 4:
+                        System.out.println("로그아웃 기능 구현 필요.");
+                        return;
+                    case 0:
+                        requestExit();
+                        break;
+                    default:
+                        System.out.println("존재하지 않는 기능입니다.");
+                        break;
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("숫자만 입력해 주세요.");
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage());
+            }
+            System.out.println();
+        }
+    }
+
     private void requestExit() {
         if (confirmExit()) {
             programRunning = false;
+            currentUser = null;
         }
     }
 
