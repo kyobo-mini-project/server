@@ -3,6 +3,22 @@
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.kyobo.server.mapper.UserMapper">
+<!-- 
+  <select id="findByLoginId" resultType="com.kyobo.server.entity.User">
+    SELECT user_id,
+           login_id,
+           user_pw,
+           name,
+           age,
+           phone_number,
+           created_at,
+           is_deleted,
+           deleted_at
+    FROM users
+    WHERE login_id = #{loginId}
+      AND is_deleted = FALSE
+  </select> -->
+
   <insert id="insert" useGeneratedKeys="true" keyProperty="userId" keyColumn="user_id">
     INSERT INTO users (login_id, user_pw, name, age, phone_number, is_deleted)
     VALUES (#{loginId}, #{userPw}, #{name}, #{age}, #{phoneNumber}, FALSE)
