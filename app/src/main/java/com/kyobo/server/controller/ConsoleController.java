@@ -75,14 +75,10 @@ public class ConsoleController {
                         System.out.println("영화 목록 조회 구현 필요");
                         break;
                     case 2:
-                        // TODO: 예매하기 구현 후 수정
-                        System.out.println("예매하기 구현 필요");
+                        // TODO: 예매 내역 조회 구현 후 수정
+                        System.out.println("예매 내역 조회 구현 필요");
                         break;
                     case 3:
-                        // TODO: 예매 내역 구현 후 수정
-                        System.out.println("예매 내역 구현 필요");
-                        break;
-                    case 4:
                         requestLogout();
                         break;
                     case 0:
