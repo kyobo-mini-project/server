@@ -5,10 +5,12 @@ import java.util.Scanner;
 
 public class ConsoleController {
     private final Scanner scanner;
+    private final UserController userController;
     private boolean programRunning = true;
 
     public ConsoleController(Scanner scanner) {
         this.scanner = scanner;
+        this.userController = new UserController(scanner);
     }
 
     public void run() {
@@ -38,8 +40,9 @@ public class ConsoleController {
                         System.out.println("로그인 구현 필요");
                         break;
                     case 3:
-                        // TODO: 회원가입 구현 후 수정
-                        System.out.println("회원가입 구현 필요");
+                        if (!userController.runSignUp()) {
+                            programRunning = false;
+                        }
                         break;
                     case 0:
                         requestExit();
@@ -49,7 +52,6 @@ public class ConsoleController {
                         break;
                 }
             } catch (InputMismatchException e) {
-                scanner.nextLine();
                 System.out.println("숫자만 입력해 주세요.");
             } catch (IllegalArgumentException e) {
                 System.out.println(e.getMessage());
