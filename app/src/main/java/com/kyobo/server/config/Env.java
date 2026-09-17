@@ -38,6 +38,18 @@ public final class Env {
         return props;
     }
 
+    public static String dbUrl() {
+        return required(firstNonBlank(load().getProperty("DB_URL"), System.getenv("DB_URL")), "DB_URL");
+    }
+
+    public static String dbUsername() {
+        return required(firstNonBlank(load().getProperty("DB_USERNAME"), System.getenv("DB_USERNAME")), "DB_USERNAME");
+    }
+
+    public static String dbPassword() {
+        return required(firstNonBlank(load().getProperty("DB_PASSWORD"), System.getenv("DB_PASSWORD")), "DB_PASSWORD");
+    }
+
     public static String firstNonBlank(String... values) {
         for (String value : values) {
             if (value != null && !value.isBlank()) {
@@ -45,5 +57,12 @@ public final class Env {
             }
         }
         return null;
+    }
+
+    private static String required(String value, String name) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalStateException(name + "이(가) 없습니다. 프로젝트 루트 .env 또는 환경 변수를 확인하세요.");
+        }
+        return value;
     }
 }
