@@ -27,6 +27,7 @@ public class UserController {
         String password = readLine("[PASSWORD] : ");
         String passwordConfirm = readLine("[PASSWORD 확인] : ");
         String name = readLine("[이름] : ");
+        String ageInput = readLine("[나이] : ");
         String phone = readLine("[전화번호] : ");
         System.out.println("===========================================================");
 
@@ -58,6 +59,12 @@ public class UserController {
                 name = readLine("[이름] : ");
                 continue;
             }
+            Integer age = parseAge(ageInput);
+            if (age == null) {
+                System.out.println("나이는 0 이상의 숫자로 입력해 주세요.");
+                ageInput = readLine("[나이] : ");
+                continue;
+            }
             if (isBlank(phone)) {
                 System.out.println("전화번호를 입력해 주세요.");
                 phone = readLine("[전화번호] : ");
@@ -65,8 +72,8 @@ public class UserController {
             }
 
             try {
-                User user = userService.signUp(loginId, password, name, phone);
-                System.out.println("회원가입이 완료되었습니다. 환영합니다, " + user.getName() + "님!");
+                User user = userService.signUp(loginId, password, name, age, phone);
+                System.out.println("회원가입이 완료되었습니다!");
                 return true;
             } catch (IllegalStateException e) {
                 System.out.println(e.getMessage() + " 다른 아이디를 입력해 주세요.");
@@ -77,6 +84,19 @@ public class UserController {
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    /** @return 유효하지 않으면 null */
+    private Integer parseAge(String value) {
+        if (isBlank(value)) {
+            return null;
+        }
+        try {
+            int age = Integer.parseInt(value.trim());
+            return age >= 0 ? age : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private String readLine(String prompt) {

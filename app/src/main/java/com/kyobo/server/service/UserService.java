@@ -8,11 +8,14 @@ import com.kyobo.server.entity.User;
 import com.kyobo.server.mapper.UserMapper;
 
 public class UserService {
-    public User signUp(String loginId, String password, String name, String phoneNumber) {
+    public User signUp(String loginId, String password, String name, int age, String phoneNumber) {
         requireNotBlank(loginId, "아이디");
         requireNotBlank(password, "비밀번호");
         requireNotBlank(name, "이름");
         requireNotBlank(phoneNumber, "전화번호");
+        if (age < 0) {
+            throw new IllegalArgumentException("나이는 0 이상으로 입력해 주세요.");
+        }
 
         String trimmedLoginId = loginId.trim();
         String trimmedName = name.trim();
@@ -29,6 +32,7 @@ public class UserService {
             user.setLoginId(trimmedLoginId);
             user.setUserPw(FieldEncryptor.hashPassword(password));
             user.setName(FieldEncryptor.encrypt(trimmedName));
+            user.setAge(age);
             user.setPhoneNumber(FieldEncryptor.encrypt(trimmedPhone));
 
             mapper.insert(user);

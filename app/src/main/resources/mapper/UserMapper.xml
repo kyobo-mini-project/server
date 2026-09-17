@@ -20,8 +20,8 @@
   </select>
 
   <insert id="insert" useGeneratedKeys="true" keyProperty="userId" keyColumn="user_id">
-    INSERT INTO users (login_id, user_pw, name, phone_number, is_deleted)
-    VALUES (#{loginId}, #{userPw}, #{name}, #{phoneNumber}, FALSE)
+    INSERT INTO users (login_id, user_pw, name, age, phone_number, is_deleted)
+    VALUES (#{loginId}, #{userPw}, #{name}, #{age}, #{phoneNumber}, FALSE)
   </insert>
 
 </mapper>
