@@ -45,3 +45,7 @@ application {
     // Define the main class for the application.
     mainClass = 'com.kyobo.server.App'
 }
+
+tasks.named('run', JavaExec) {
+    standardInput = System.in
+}
