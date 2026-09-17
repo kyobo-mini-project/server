@@ -83,8 +83,8 @@ public class ConsoleController {
                         System.out.println("예매 내역 구현 필요");
                         break;
                     case 4:
-                        System.out.println("로그아웃 기능 구현 필요.");
-                        return;
+                        requestLogout();
+                        break;
                     case 0:
                         requestExit();
                         break;
@@ -99,6 +99,19 @@ public class ConsoleController {
             }
             System.out.println();
         }
+    }
+
+    private void requestLogout() {
+        if (confirmLogout()) {
+            System.out.println("로그아웃되었습니다.");
+            currentUser = null;
+        }
+    }
+
+    private boolean confirmLogout() {
+        System.out.print("정말 로그아웃하시겠습니까? (로그아웃: 0, 취소: 1) ");
+        int answer = readInt("");
+        return answer == 0;
     }
 
     private void requestExit() {
