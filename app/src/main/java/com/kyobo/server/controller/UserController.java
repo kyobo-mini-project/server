@@ -72,7 +72,7 @@ public class UserController {
             }
 
             try {
-                User user = userService.signUp(loginId, password, name, age, phone);
+                userService.signUp(loginId, password, name, age, phone);
                 System.out.println("회원가입이 완료되었습니다!");
                 return true;
             } catch (IllegalStateException e) {
