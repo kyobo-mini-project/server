@@ -2,6 +2,7 @@ package com.kyobo.server.service;
 
 import org.apache.ibatis.session.SqlSession;
 
+import com.kyobo.server.config.FieldEncryptor;
 import com.kyobo.server.config.MyBatisConfig;
 import com.kyobo.server.entity.User;
 import com.kyobo.server.mapper.UserMapper;
@@ -14,6 +15,8 @@ public class UserService {
         requireNotBlank(phoneNumber, "전화번호");
 
         String trimmedLoginId = loginId.trim();
+        String trimmedName = name.trim();
+        String trimmedPhone = phoneNumber.trim();
 
         try (SqlSession session = MyBatisConfig.sqlSessionFactory().openSession()) {
             UserMapper mapper = session.getMapper(UserMapper.class);
@@ -24,12 +27,17 @@ public class UserService {
 
             User user = new User();
             user.setLoginId(trimmedLoginId);
-            user.setUserPw(password);
-            user.setName(name.trim());
-            user.setPhoneNumber(phoneNumber.trim());
+            user.setUserPw(FieldEncryptor.hashPassword(password));
+            user.setName(FieldEncryptor.encrypt(trimmedName));
+            user.setPhoneNumber(FieldEncryptor.encrypt(trimmedPhone));
 
             mapper.insert(user);
             session.commit();
+
+            // 화면 표시용으로 평문 이름 반환 (DB에는 암호문 저장됨)
+            user.setName(trimmedName);
+            user.setPhoneNumber(trimmedPhone);
+            user.setUserPw(null);
             return user;
         }
     }
