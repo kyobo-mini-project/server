@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS users (
     user_pw     VARCHAR NOT NULL,
     name        VARCHAR NOT NULL,
     age         INTEGER,
-    phone_numer VARCHAR NOT NULL,
+    phone_number VARCHAR NOT NULL,
     created_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
     is_deleted  BOOLEAN DEFAULT FALSE NOT NULL,
     deleted_at  TIMESTAMP WITH TIME ZONE

@@ -8,8 +8,8 @@ public class User {
     private String userPw;
     private String name;
     private Integer age;
-    /** DB 컬럼명 phone_numer 그대로 매핑 */
-    private String phoneNumer;
+    /** DB 컬럼 phone_number */
+    private String phoneNumber;
     private OffsetDateTime createdAt;
     private Boolean isDeleted;
     private OffsetDateTime deletedAt;
@@ -54,12 +54,12 @@ public class User {
         this.age = age;
     }
 
-    public String getPhoneNumer() {
-        return phoneNumer;
+    public String getPhoneNumber() {
+        return phoneNumber;
     }
 
-    public void setPhoneNumer(String phoneNumer) {
-        this.phoneNumer = phoneNumer;
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     public OffsetDateTime getCreatedAt() {
