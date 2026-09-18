@@ -47,6 +47,18 @@ application {
     mainClass = 'com.kyobo.server.App'
 }
 
-tasks.named('run', JavaExec) {
-    standardInput = System.in
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
 }
+
+tasks.withType(JavaExec).configureEach {
+    standardInput = System.in
+    // Keep application output aligned with the UTF-8 project and IDE console.
+    jvmArgs '-Dfile.encoding=UTF-8',
+            '-Dstdout.encoding=UTF-8',
+            '-Dstderr.encoding=UTF-8',
+            '-Dsun.stdout.encoding=UTF-8',
+            '-Dsun.stderr.encoding=UTF-8'
+
+}
+
