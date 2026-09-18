@@ -3,6 +3,7 @@ package com.kyobo.server.controller;
 import java.util.Scanner;
 import java.util.function.BooleanSupplier;
 
+import com.kyobo.server.config.MyBatisConfig;
 import com.kyobo.server.entity.MovieDetail;
 import com.kyobo.server.service.MovieDetailService;
 
@@ -11,6 +12,15 @@ public class MovieDetailController {
     private final Scanner scanner;
     private final MovieDetailService movieDetailService;
     private final BooleanSupplier requestExit;
+
+    /** 기존 종료 메서드를 전달받고 프로젝트의 MyBatis 설정을 사용한다. */
+    public MovieDetailController(Scanner scanner, BooleanSupplier requestExit) {
+        this(
+                scanner,
+                new MovieDetailService(MyBatisConfig.sqlSessionFactory()),
+                requestExit
+        );
+    }
 
     public MovieDetailController(
             Scanner scanner,

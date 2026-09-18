@@ -1,7 +1,7 @@
 package com.kyobo.server.service;
 
 import com.kyobo.server.entity.MovieDetail;
-import com.kyobo.server.mapper.MovieDetailMapper;
+import com.kyobo.server.mapper.MovieMapper;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
@@ -19,8 +19,8 @@ public class MovieDetailService {
         }
 
         try (SqlSession session = sqlSessionFactory.openSession()) {
-            MovieDetailMapper mapper =
-                    session.getMapper(MovieDetailMapper.class);
+            MovieMapper mapper =
+                    session.getMapper(MovieMapper.class);
 
             return mapper.findMovieDetail(movieId);
         }

@@ -22,4 +22,30 @@
     GROUP BY m.movie_id, m.title
     ORDER BY m.movie_id ASC
   </select>
+
+  <select id="findMovieDetail"
+resultType="com.kyobo.server.entity.MovieDetail" >
+      SELECT
+        m.movie_id AS "movieId",
+        m.title,
+        m.director,
+        m.running_time AS "runningTime",
+        m.release_date AS "releaseDate",
+        m.age_limit AS "ageLimit",
+        m.content,
+        (
+            SELECT STRING_AGG(
+                DISTINCT g.genre_name,
+                ', ' ORDER BY g.genre_name
+            )
+            FROM movie_genres mg
+            JOIN genres g ON mg.genre_id = g.genre_id
+            WHERE mg.movie_id = m.movie_id
+        ) AS genres
+      FROM movies m
+      WHERE m.movie_id = #{movieId}
+  </select>
+
+
+
 </mapper>
