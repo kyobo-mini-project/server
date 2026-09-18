@@ -8,12 +8,14 @@ import com.kyobo.server.entity.User;
 public class ConsoleController {
     private final Scanner scanner;
     private final UserController userController;
+    private final MovieController movieController;
     private boolean programRunning = true;
     private User currentUser;
 
     public ConsoleController(Scanner scanner) {
         this.scanner = scanner;
         this.userController = new UserController(scanner);
+        this.movieController = new MovieController(scanner);
     }
 
     public void run() {
@@ -35,8 +37,7 @@ public class ConsoleController {
                 int selected = readInt("기능 선택: ");
                 switch (selected) {
                     case 1:
-                        // TODO: 영화 목록 조회 구현 후 수정
-                        System.out.println("영화 목록 조회 구현 필요");
+                        programRunning = movieController.runMovieList();
                         break;
                     case 2:
                         currentUser = userController.runSignIn();
@@ -71,8 +72,7 @@ public class ConsoleController {
                 int selected = readInt("기능 선택: ");
                 switch (selected) {
                     case 1:
-                        // TODO: 영화 목록 조회 구현 후 수정
-                        System.out.println("영화 목록 조회 구현 필요");
+                        programRunning = movieController.runMovieList();
                         break;
                     case 2:
                         // TODO: 예매 내역 조회 구현 후 수정
