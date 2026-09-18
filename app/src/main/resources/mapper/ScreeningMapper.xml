@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kyobo.server.mapper.ScreeningMapper">
+
+  <select id="findDetailByScreeningId" resultType="com.kyobo.server.entity.Screening">
+    SELECT s.screening_id,
+           s.cinema_id,
+           s.room_id,
+           s.movie_id,
+           s.screening_date,
+           s.start_time,
+           s.end_time,
+           m.title,
+           m.age_limit,
+           m.running_time,
+           m.director,
+           m.content,
+           r.room_name
+    FROM screenings s
+    JOIN movies m ON m.movie_id = s.movie_id
+    JOIN rooms r ON r.room_id = s.room_id
+    WHERE s.screening_id = #{screeningId}
+  </select>
+
+</mapper>

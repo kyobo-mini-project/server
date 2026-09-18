@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kyobo.server.mapper.SeatMapper">
+
+  <select id="findActiveByRoomId" resultType="com.kyobo.server.entity.Seat">
+    SELECT seat_id,
+           room_id,
+           row_name,
+           col_num,
+           is_active
+    FROM seats
+    WHERE room_id = #{roomId}
+      AND is_active = TRUE
+    ORDER BY row_name ASC, col_num ASC
+  </select>
+
+  <select id="findBookedSeatIdsByScreeningId" resultType="int">
+    SELECT bs.seat_id
+    FROM booked_seats bs
+    JOIN bookings b ON b.booking_id = bs.booking_id
+    WHERE bs.screening_id = #{screeningId}
+      AND b.booking_status = 'DONE'
+  </select>
+
+</mapper>
