@@ -3,5 +3,6 @@
   "java.import.gradle.wrapper.enabled": true,
   "java.configuration.updateBuildConfiguration": "automatic",
   "java.import.gradle.arguments": "--no-configuration-cache",
-  "java.jdt.ls.lombokSupport.enabled": false
+  "java.jdt.ls.lombokSupport.enabled": false,
+  "java.compile.nullAnalysis.mode": "automatic"
 }

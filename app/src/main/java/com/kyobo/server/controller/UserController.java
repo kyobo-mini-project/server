@@ -43,6 +43,12 @@ public class UserController {
                 password = readLine("[PASSWORD] : ");
                 continue;
             }
+            if (!isValidPassword(password)) {
+                System.out.println("비밀번호는 영문과 숫자를 포함해 8자 이상이어야 합니다.");
+                password = readLine("[PASSWORD] : ");
+                passwordConfirm = readLine("[PASSWORD 확인] : ");
+                continue;
+            }
             if (isBlank(passwordConfirm)) {
                 System.out.println("비밀번호 확인을 입력해 주세요.");
                 passwordConfirm = readLine("[PASSWORD 확인] : ");
@@ -75,6 +81,10 @@ public class UserController {
                 userService.signUp(loginId, password, name, age, phone);
                 System.out.println("회원가입이 완료되었습니다!");
                 return true;
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage());
+                password = readLine("[PASSWORD] : ");
+                passwordConfirm = readLine("[PASSWORD 확인] : ");
             } catch (IllegalStateException e) {
                 System.out.println(e.getMessage() + " 다른 아이디를 입력해 주세요.");
                 loginId = readLine("[ID] : ");
@@ -120,6 +130,11 @@ public class UserController {
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    /** 영문·숫자 각각 1자 이상, 총 8자 이상 */
+    private boolean isValidPassword(String password) {
+        return password != null && password.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$");
     }
 
     /** @return 유효하지 않으면 null */
