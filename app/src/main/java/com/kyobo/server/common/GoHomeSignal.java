@@ -7,8 +7,5 @@ package com.kyobo.server.common;
  * 이 예외는 "현재 화면의 호출자까지 건너뛰어야 하는" 경우에만 던진다.
  * 진단용이 아니라 흐름 제어용이라 스택트레이스는 채우지 않는다.
  */
-public class GoHomeSignal extends RuntimeException {
-    public GoHomeSignal() {
-        super(null, null, false, false);
-    }
+public class GoHomeSignal extends ControlFlowSignal {
 }

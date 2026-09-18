@@ -9,6 +9,7 @@ import com.kyobo.server.common.ApiResponse;
 import com.kyobo.server.config.MyBatisConfig;
 import com.kyobo.server.entity.BookedSeat;
 import com.kyobo.server.entity.Booking;
+import com.kyobo.server.entity.Cinema;
 import com.kyobo.server.entity.Screening;
 import com.kyobo.server.entity.Seat;
 import com.kyobo.server.mapper.BookedSeatMapper;
@@ -17,10 +18,19 @@ import com.kyobo.server.mapper.ScreeningMapper;
 import com.kyobo.server.mapper.SeatMapper;
 
 public class BookingService {
-    public ApiResponse<List<Screening>> findScreeningsByMovie(int movieId) {
+    public ApiResponse<List<Cinema>> findCinemasByMovie(int movieId) {
         try (SqlSession session = MyBatisConfig.sqlSessionFactory().openSession()) {
             ScreeningMapper mapper = session.getMapper(ScreeningMapper.class);
-            return ApiResponse.success(mapper.findByMovieId(movieId));
+            return ApiResponse.success(mapper.findCinemasByMovie(movieId));
+        } catch (Exception e) {
+            return ApiResponse.error("영화관 조회 중 오류가 발생했습니다.");
+        }
+    }
+
+    public ApiResponse<List<Screening>> findScreenings(int movieId, int cinemaId) {
+        try (SqlSession session = MyBatisConfig.sqlSessionFactory().openSession()) {
+            ScreeningMapper mapper = session.getMapper(ScreeningMapper.class);
+            return ApiResponse.success(mapper.findByMovieAndCinema(movieId, cinemaId));
         } catch (Exception e) {
             return ApiResponse.error("상영회차 조회 중 오류가 발생했습니다.");
         }

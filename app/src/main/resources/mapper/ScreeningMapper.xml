@@ -4,7 +4,17 @@
   "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.kyobo.server.mapper.ScreeningMapper">
 
-  <select id="findByMovieId" resultType="com.kyobo.server.entity.Screening">
+  <select id="findCinemasByMovie" resultType="com.kyobo.server.entity.Cinema">
+    SELECT DISTINCT c.cinema_id, c.cinema_name
+    FROM screenings s
+    JOIN cinemas c ON c.cinema_id = s.cinema_id
+    WHERE s.movie_id = #{movieId}
+      AND (s.screening_date, s.start_time)
+          >= ((now() AT TIME ZONE 'Asia/Seoul')::date, (now() AT TIME ZONE 'Asia/Seoul')::time)
+    ORDER BY c.cinema_id
+  </select>
+
+  <select id="findByMovieAndCinema" resultType="com.kyobo.server.entity.Screening">
     SELECT s.screening_id,
            s.movie_id,
            s.cinema_id,
@@ -19,6 +29,9 @@
     JOIN rooms r ON r.room_id = s.room_id
     JOIN cinemas c ON c.cinema_id = s.cinema_id
     WHERE s.movie_id = #{movieId}
+      AND s.cinema_id = #{cinemaId}
+      AND (s.screening_date, s.start_time)
+          >= ((now() AT TIME ZONE 'Asia/Seoul')::date, (now() AT TIME ZONE 'Asia/Seoul')::time)
     ORDER BY s.screening_date, s.start_time
   </select>
 

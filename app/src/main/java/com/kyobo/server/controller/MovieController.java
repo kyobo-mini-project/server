@@ -5,19 +5,22 @@ import java.util.List;
 import java.util.Scanner;
 
 import com.kyobo.server.entity.MovieListItem;
+import com.kyobo.server.entity.User;
 import com.kyobo.server.service.MovieService;
 
 public class MovieController {
     private final Scanner scanner;
     private final MovieService movieService;
+    private final MovieDetailController movieDetailController;
 
     public MovieController(Scanner scanner) {
         this.scanner = scanner;
         this.movieService = new MovieService();
+        this.movieDetailController = new MovieDetailController(scanner, this::requestExit); //moviedetail추가
     }
 
     /** @return false면 프로그램을 종료하고, true면 홈 메뉴로 돌아간다. */
-    public boolean runMovieList() {
+    public boolean runMovieList(User currentUser) {
         List<MovieListItem> movies = movieService.getMovieList();
         printMovieList(movies);
 
@@ -29,7 +32,13 @@ public class MovieController {
                         if (movies.isEmpty()) {
                             printInvalidMenu();
                         } else {
-                            runMovieDetail();
+                            boolean continueProgram =
+                            runMovieDetail(currentUser);
+
+                            if (continueProgram == false){
+                                return false;
+                            }
+                            printMovieList(movies);
                         }
                     }
                     case 2 -> {
@@ -68,9 +77,8 @@ public class MovieController {
                 : "[1. 영화 상세 조회] [2. 뒤로가기] [0. 종료]");
     }
 
-    private void runMovieDetail() {
-        // 영화 상세 조회(F-05)가 구현되면 해당 컨트롤러로 위임한다.
-        System.out.println("영화 상세 조회 기능은 아직 구현되지 않았습니다.");
+    private boolean runMovieDetail(User currentUser) {
+        return movieDetailController.runMovieDetail(currentUser);
     }
 
     private void printInvalidMenu() {

@@ -1,5 +1,7 @@
 package com.kyobo.server.controller;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -8,9 +10,12 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.kyobo.server.common.ApiResponse;
 import com.kyobo.server.common.GoHomeSignal;
+import com.kyobo.server.entity.Cinema;
 import com.kyobo.server.entity.Screening;
 import com.kyobo.server.entity.Seat;
 import com.kyobo.server.entity.User;
@@ -20,8 +25,9 @@ import com.kyobo.server.service.BookingService;
  * 영화 상세조회에서 영화가 정해진 상태로 호출되는 예매 화면.
  * 로그인된 사용자만 진입한다는 전제이므로, 비로그인 체크는 호출하는 쪽(상세조회) 책임이다.
  *
- * 흐름: 상영회차 선택 -> 좌석 수 입력 -> 좌석 선택 -> 예매확인서.
- * 각 단계에서 0을 입력하면 확인 없이 바로 이전 단계로 돌아간다(상영회차 선택 단계에서는 예매 자체를 취소하고 호출한 쪽으로 복귀).
+ * 흐름: 영화관 선택 -> 날짜 선택 -> 상영회차 선택 -> 좌석 수 입력 -> 좌석 선택 -> 예매확인서.
+ * (한 영화가 여러 영화관·한 달 가까이 상영되므로, 영화관과 날짜를 먼저 좁혀야 상영회차 목록이 감당할 만한 길이가 된다.)
+ * 각 단계에서 0을 입력하면 확인 없이 바로 이전 단계로 돌아간다(영화관 선택 단계에서는 예매 자체를 취소하고 호출한 쪽으로 복귀).
  * 좌석 선점 경쟁으로 예매가 실패해도 앱을 끝내지 않고 좌석 선택 단계로 되돌린다.
  */
 public class BookingController {
@@ -40,68 +46,134 @@ public class BookingController {
         System.out.println(movieTitle);
         System.out.println("-----------------------------------------------------------");
 
-        ApiResponse<List<Screening>> screeningsResponse = bookingService.findScreeningsByMovie(movieId);
-        if (!screeningsResponse.isSuccess()) {
-            System.out.println(screeningsResponse.getStatusMessage());
+        ApiResponse<List<Cinema>> cinemasResponse = bookingService.findCinemasByMovie(movieId);
+        if (!cinemasResponse.isSuccess()) {
+            System.out.println(cinemasResponse.getStatusMessage());
             return;
         }
-        List<Screening> screenings = screeningsResponse.getData();
-        if (screenings.isEmpty()) {
-            System.out.println("현재 예매 가능한 상영회차가 없습니다.");
+        List<Cinema> cinemas = cinemasResponse.getData();
+        if (cinemas.isEmpty()) {
+            System.out.println("현재 예매 가능한 영화관이 없습니다.");
             return;
         }
 
-        screeningLoop:
+        cinemaLoop:
         while (true) {
-            Screening screening = chooseScreening(screenings);
-            if (screening == null) {
+            Cinema cinema = chooseCinema(cinemas);
+            if (cinema == null) {
                 return;
             }
 
-            seatCountLoop:
+            ApiResponse<List<Screening>> screeningsResponse =
+                    bookingService.findScreenings(movieId, cinema.getCinemaId());
+            if (!screeningsResponse.isSuccess()) {
+                System.out.println(screeningsResponse.getStatusMessage());
+                continue;
+            }
+            List<Screening> screenings = screeningsResponse.getData();
+            if (screenings.isEmpty()) {
+                System.out.println("해당 영화관에는 예매 가능한 상영회차가 없습니다.");
+                continue;
+            }
+
+            dateLoop:
             while (true) {
-                int seatCount = readSeatCount();
-                if (seatCount == -1) {
-                    continue screeningLoop;
+                LocalDate date = chooseDate(screenings);
+                if (date == null) {
+                    continue cinemaLoop;
                 }
 
+                List<Screening> screeningsOnDate = screenings.stream()
+                        .filter(s -> s.getScreeningDate().equals(date))
+                        .collect(Collectors.toList());
+                if (screeningsOnDate.isEmpty()) {
+                    System.out.println("해당 날짜에는 상영회차가 없습니다.");
+                    continue;
+                }
+
+                screeningLoop:
                 while (true) {
-                    List<Seat> selectedSeats = chooseSeats(screening, seatCount);
-                    if (selectedSeats == null) {
-                        continue seatCountLoop;
+                    Screening screening = chooseScreening(screeningsOnDate);
+                    if (screening == null) {
+                        continue dateLoop;
                     }
 
-                    ApiResponse<Void> bookingResponse = bookingService.createBooking(
-                            user.getUserId(), movieId, screening.getScreeningId(), selectedSeats);
-                    if (!bookingResponse.isSuccess()) {
-                        System.out.println(bookingResponse.getStatusMessage());
-                        continue;
-                    }
+                    seatCountLoop:
+                    while (true) {
+                        int seatCount = readSeatCount();
+                        if (seatCount == -1) {
+                            continue screeningLoop;
+                        }
 
-                    printBookingComplete(screening, movieTitle);
-                    return;
+                        while (true) {
+                            List<Seat> selectedSeats = chooseSeats(screening, seatCount);
+                            if (selectedSeats == null) {
+                                continue seatCountLoop;
+                            }
+
+                            ApiResponse<Void> bookingResponse = bookingService.createBooking(
+                                    user.getUserId(), movieId, screening.getScreeningId(), selectedSeats);
+                            if (!bookingResponse.isSuccess()) {
+                                System.out.println(bookingResponse.getStatusMessage());
+                                continue;
+                            }
+
+                            printBookingComplete(screening, movieTitle);
+                            return;
+                        }
+                    }
                 }
             }
         }
     }
 
-    /** @return 선택한 상영회차, 0 입력 시 null (예매 취소) */
-    private Screening chooseScreening(List<Screening> screenings) {
+    /** @return 선택한 날짜, 0 입력 시 null (이전 단계로) */
+    private LocalDate chooseDate(List<Screening> screenings) {
+        LocalDate minDate = screenings.stream().map(Screening::getScreeningDate).min(LocalDate::compareTo).orElse(null);
+        LocalDate maxDate = screenings.stream().map(Screening::getScreeningDate).max(LocalDate::compareTo).orElse(null);
+
         while (true) {
             System.out.println();
-            System.out.println("상영회차를 선택하세요. (0: 취소)");
-            for (int i = 0; i < screenings.size(); i++) {
-                Screening s = screenings.get(i);
-                System.out.println((i + 1) + ". " + s.getScreeningDate() + " " + s.getStartTime()
-                        + " (" + s.getRoomName() + ", " + s.getCinemaName() + ")");
+            System.out.println("관람 날짜를 입력하세요. (관람 가능 기간: " + minDate + " ~ " + maxDate + ") (0: 이전 단계로)");
+            String input = readLine("날짜 (예: 2026-09-15): ");
+            if (input.equals("0")) {
+                return null;
+            }
+            try {
+                return LocalDate.parse(input);
+            } catch (DateTimeParseException e) {
+                System.out.println("날짜 형식이 올바르지 않습니다. (예: 2026-09-15)");
+            }
+        }
+    }
+
+    /** @return 선택한 영화관, 0 입력 시 null (예매 취소) */
+    private Cinema chooseCinema(List<Cinema> cinemas) {
+        return chooseFromList(cinemas, "영화관을 선택하세요. (0: 취소)", Cinema::getCinemaName);
+    }
+
+    /** @return 선택한 상영회차, 0 입력 시 null (이전 단계로) */
+    private Screening chooseScreening(List<Screening> screenings) {
+        String header = screenings.get(0).getScreeningDate() + " 상영회차를 선택하세요. (0: 이전 단계로)";
+        return chooseFromList(screenings, header,
+                s -> s.getStartTime() + "~" + s.getEndTime() + " (" + s.getRoomName() + ")");
+    }
+
+    /** 번호 매긴 목록을 보여주고 하나를 고르게 한다. @return 고른 항목, 0 입력 시 null */
+    private <T> T chooseFromList(List<T> items, String header, Function<T, String> labelFn) {
+        while (true) {
+            System.out.println();
+            System.out.println(header);
+            for (int i = 0; i < items.size(); i++) {
+                System.out.println((i + 1) + ". " + labelFn.apply(items.get(i)));
             }
             String input = readLine("선택: ");
             if (input.equals("0")) {
                 return null;
             }
             int choice = parseIntOrDefault(input, -1);
-            if (choice >= 1 && choice <= screenings.size()) {
-                return screenings.get(choice - 1);
+            if (choice >= 1 && choice <= items.size()) {
+                return items.get(choice - 1);
             }
             System.out.println("올바른 번호를 입력하세요.");
         }
@@ -188,9 +260,11 @@ public class BookingController {
             colNums.add(seat.getColNum());
         }
 
+        // □/■는 한글 폰트에서 2칸 너비로 렌더링되는 경우가 많아, 좌석 칸(기호+공백2칸=4칸)에
+        // 맞춰 숫자 헤더도 4칸 너비로 맞춘다.
         StringBuilder header = new StringBuilder("   ");
         for (int col : colNums) {
-            header.append(String.format("%-3d", col));
+            header.append(String.format("%-4d", col));
         }
         System.out.println(header);
 
@@ -199,7 +273,7 @@ public class BookingController {
             for (int col : colNums) {
                 Seat seat = rowEntry.getValue().get(col);
                 if (seat == null) {
-                    line.append("   ");
+                    line.append("    ");
                 } else {
                     line.append(seat.booked() ? "■  " : "□  ");
                 }
@@ -240,6 +314,6 @@ public class BookingController {
         if (!prompt.isBlank()) {
             System.out.print(prompt);
         }
-        return scanner.nextLine();
+        return scanner.nextLine().trim();
     }
 }
