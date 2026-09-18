@@ -118,7 +118,7 @@ public class BookingController {
                                 continue;
                             }
 
-                            printBookingComplete(screening, movieTitle);
+                            printBookingComplete(screening, movieTitle, selectedSeats);
                             return;
                         }
                     }
@@ -260,11 +260,13 @@ public class BookingController {
             colNums.add(seat.getColNum());
         }
 
-        // □/■는 한글 폰트에서 2칸 너비로 렌더링되는 경우가 많아, 좌석 칸(기호+공백2칸=4칸)에
-        // 맞춰 숫자 헤더도 4칸 너비로 맞춘다.
+        // 좌석 칸(기호 1글자 + 공백 2칸 = 3칸)과 너비를 맞춘다.
+        int gridWidth = 3 + colNums.size() * 3;
+        printScreenIndicator(gridWidth);
+
         StringBuilder header = new StringBuilder("   ");
         for (int col : colNums) {
-            header.append(String.format("%-4d", col));
+            header.append(String.format("%-3d", col));
         }
         System.out.println(header);
 
@@ -273,7 +275,7 @@ public class BookingController {
             for (int col : colNums) {
                 Seat seat = rowEntry.getValue().get(col);
                 if (seat == null) {
-                    line.append("    ");
+                    line.append("   ");
                 } else {
                     line.append(seat.booked() ? "■  " : "□  ");
                 }
@@ -283,16 +285,28 @@ public class BookingController {
         System.out.println();
     }
 
+    /** 좌석 그리드 너비에 맞춰 가운데 정렬된 스크린 표시줄을 출력한다. */
+    private void printScreenIndicator(int gridWidth) {
+        String label = " 스크린 ";
+        int dashCount = Math.max(gridWidth - label.length(), 4);
+        int leftDashes = dashCount / 2;
+        int rightDashes = dashCount - leftDashes;
+        System.out.println("-".repeat(leftDashes) + label + "-".repeat(rightDashes));
+    }
+
     /** 예매 완료 후에는 되돌아갈 단계가 없으므로, 0 입력 시 상세조회를 건너뛰고 로그인 후 메인 메뉴로 바로 돌아간다. */
-    private void printBookingComplete(Screening screening, String movieTitle) {
+    private void printBookingComplete(Screening screening, String movieTitle, List<Seat> selectedSeats) {
+        String seatCodes = selectedSeats.stream().map(Seat::seatCode).collect(Collectors.joining(", "));
+
         System.out.println();
         System.out.println(DIVIDER);
         System.out.println("★ 예매확인서 ★");
         System.out.println("-----------------------------------------------------------");
-        System.out.println(screening.getCinemaName());
         System.out.println(movieTitle);
-        System.out.println(screening.getRoomName());
+        System.out.println(screening.getCinemaName());
         System.out.println(screening.getFloor() + "층");
+        System.out.println(screening.getRoomName());
+        System.out.println(seatCodes);
         System.out.println(screening.getScreeningDate() + " " + screening.getStartTime());
         System.out.println(DIVIDER);
 
