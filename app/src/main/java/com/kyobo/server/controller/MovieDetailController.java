@@ -3,8 +3,10 @@ package com.kyobo.server.controller;
 import java.util.Scanner;
 import java.util.function.BooleanSupplier;
 
+import com.kyobo.server.common.RequireLoginSignal;
 import com.kyobo.server.config.MyBatisConfig;
 import com.kyobo.server.entity.MovieDetail;
+import com.kyobo.server.entity.User;
 import com.kyobo.server.service.MovieDetailService;
 
 public class MovieDetailController {
@@ -33,7 +35,7 @@ public class MovieDetailController {
     }
 
     /** @return false면 프로그램 종료, true면 영화 목록으로 복귀 */
-    public boolean runMovieDetail() {
+    public boolean runMovieDetail(User currentUser) {
         MovieDetail movie;
 
         // 1. 상세 조회할 영화 번호 입력
@@ -92,7 +94,7 @@ public class MovieDetailController {
             switch (input) {
                 case "1" -> {
                     boolean continueProgram =
-                            runBooking(movie.getMovieId());
+                            runBooking(movie, currentUser);
 
                     if (!continueProgram) {
                         return false;
@@ -162,16 +164,15 @@ public class MovieDetailController {
         );
     }
 
-    /**
-     * 예매 기능 연결 자리
-     * @return false면 프로그램 종료, true면 상세 화면으로 복귀
-     */
-    private boolean runBooking(Integer movieId) {
-        // 예매 기능 구현 후 해당 컨트롤러로 위임한다.
-        // 현재 상세보기 중인 영화의 movieId를 전달한다.
-        System.out.println("선택한 영화 번호: " + movieId);
-        System.out.println("영화 예매 기능은 아직 연결되지 않았습니다.");
+    /** @return false면 프로그램 종료, true면 상세 화면으로 복귀 */
+    private boolean runBooking(MovieDetail movie, User currentUser) {
+        //어디갔어....로그인확인기능....나...우뤄.....
+        if (currentUser == null) {
+            System.out.println("로그인이 필요한 기능입니다. 로그인 화면으로 이동합니다.");
+            throw new RequireLoginSignal();
+        }
 
+        new BookingController(scanner).runBooking(movie.getMovieId(), movie.getTitle(), currentUser);
         return true;
     }
 

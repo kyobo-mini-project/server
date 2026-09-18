@@ -23,6 +23,10 @@ public class ApiResponse<T> {
         return new ApiResponse<>("500", statusMessage, null);
     }
 
+    public boolean isSuccess() {
+        return "00".equals(statusCode);
+    }
+
     public String getStatusCode() {
         return statusCode;
     }
