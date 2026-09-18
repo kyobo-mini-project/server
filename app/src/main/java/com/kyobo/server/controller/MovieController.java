@@ -36,14 +36,7 @@ public class MovieController {
                         return true;
                     }
                     case 0 -> {
-                        System.out.print("정말 종료하시겠습니까? (종료: 0, 취소: 1) ");
-                        int answer = readInt("");
-                        if (answer == 0) {
-                            System.out.println("================================================");
-                            System.out.println("교보시네마를 종료합니다. 안녕히 가세요 👋");
-                            System.out.println("================================================");
-                            return false;
-                        }
+                        return requestExit();
                     }
                     default -> printInvalidMenu();
                 }
@@ -93,5 +86,17 @@ public class MovieController {
         int value = scanner.nextInt();
         scanner.nextLine();
         return value;
+    }
+
+    public boolean requestExit() {
+        System.out.print("정말 종료하시겠습니까? (종료: 0, 취소: 1) ");
+        int answer = readInt("");
+        if (answer == 0) {
+            System.out.println("================================================");
+            System.out.println("교보시네마를 종료합니다. 안녕히 가세요 👋");
+            System.out.println("================================================");
+            return false;
+        }
+        return true;
     }
 }
