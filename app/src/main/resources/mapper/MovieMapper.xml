@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kyobo.server.mapper.MovieMapper">
+  <select id="findAllWithGenres" resultType="com.kyobo.server.entity.MovieListItem">
+    SELECT m.movie_id,
+           m.title,
+           COALESCE(
+             STRING_AGG(DISTINCT g.genre_name, ', ' ORDER BY g.genre_name),
+             '미분류'
+           ) AS genres
+    FROM movies m
+    LEFT JOIN movie_genres mg ON m.movie_id = mg.movie_id
+    LEFT JOIN genres g ON mg.genre_id = g.genre_id
+    WHERE EXISTS (
+        SELECT 1
+        FROM screenings s
+        WHERE s.movie_id = m.movie_id
+        AND (s.screening_date + s.start_time) >= CURRENT_TIMESTAMP
+    )
+    GROUP BY m.movie_id, m.title
+    ORDER BY m.movie_id ASC
+  </select>
+</mapper>

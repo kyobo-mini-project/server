@@ -1,5 +1,5 @@
 -- schema v1 snapshot (code record only, not executed on app start)
--- 적용 순서: cinemas → rooms → seats → genres → movies → movie_genres
+-- 적용 순서: cinemas → admins → rooms → seats → genres → movies → movie_genres
 --            → screenings → users → bookings → booked_seats
 
 CREATE TABLE IF NOT EXISTS cinemas (
@@ -7,6 +7,13 @@ CREATE TABLE IF NOT EXISTS cinemas (
     cinema_name VARCHAR(100) NOT NULL UNIQUE,
     address     VARCHAR(255) NOT NULL,
     cs_number   VARCHAR(20)
+);
+
+CREATE TABLE IF NOT EXISTS admins (
+    admin_id       INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    cinema_id      INTEGER NOT NULL REFERENCES cinemas (cinema_id) ON DELETE CASCADE,
+    admin_code     VARCHAR(50) NOT NULL UNIQUE,
+    admin_password VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS rooms (
