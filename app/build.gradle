@@ -51,21 +51,14 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
-tasks.named('run', JavaExec) {
+tasks.withType(JavaExec).configureEach {
     standardInput = System.in
-    // Java 21 기본 출력은 UTF-8인데, Windows IntelliJ 콘솔은 보통 MS949라
-    // UTF-8을 강제하면 한글이 한자처럼 깨진다. Windows만 콘솔 네이티브 인코딩(COMPAT) 사용.
-    def isWindows = System.getProperty('os.name').toLowerCase().contains('windows')
-    if (isWindows) {
-        jvmArgs '-Dfile.encoding=UTF-8',
-                '-Dstdout.encoding=COMPAT',
-                '-Dstderr.encoding=COMPAT',
-                '-Dsun.stdout.encoding=COMPAT',
-                '-Dsun.stderr.encoding=COMPAT'
-    } else {
-        jvmArgs '-Dfile.encoding=UTF-8',
-                '-Dstdout.encoding=UTF-8',
-                '-Dstderr.encoding=UTF-8'
-    }
+    // Keep application output aligned with the UTF-8 project and IDE console.
+    jvmArgs '-Dfile.encoding=UTF-8',
+            '-Dstdout.encoding=UTF-8',
+            '-Dstderr.encoding=UTF-8',
+            '-Dsun.stdout.encoding=UTF-8',
+            '-Dsun.stderr.encoding=UTF-8'
+
 }
 
