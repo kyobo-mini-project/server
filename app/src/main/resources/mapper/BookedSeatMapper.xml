@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kyobo.server.mapper.BookedSeatMapper">
+
+  <insert id="insert" useGeneratedKeys="true" keyProperty="bookedSeatId" keyColumn="booked_seat_id">
+    INSERT INTO booked_seats (booking_id, seat_id, screening_id)
+    VALUES (#{bookingId}, #{seatId}, #{screeningId})
+  </insert>
+
+</mapper>

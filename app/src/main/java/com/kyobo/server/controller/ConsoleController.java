@@ -3,6 +3,7 @@ package com.kyobo.server.controller;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
+import com.kyobo.server.common.GoHomeSignal;
 import com.kyobo.server.entity.User;
 
 public class ConsoleController {
@@ -105,6 +106,8 @@ public class ConsoleController {
                 System.out.println("숫자만 입력해 주세요.");
             } catch (IllegalArgumentException e) {
                 System.out.println(e.getMessage());
+            } catch (GoHomeSignal e) {
+                // 예매 등 중첩 화면에서 홈으로 복귀 확정 - 별도 처리 없이 메인 메뉴 루프 계속
             }
             System.out.println();
         }
