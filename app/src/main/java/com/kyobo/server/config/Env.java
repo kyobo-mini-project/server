@@ -50,6 +50,13 @@ public final class Env {
         return required(firstNonBlank(load().getProperty("DB_PASSWORD"), System.getenv("DB_PASSWORD")), "DB_PASSWORD");
     }
 
+    /** AES 암호화용 비밀키 (평문 문자열 → SHA-256으로 32바이트 키 유도) */
+    public static String encryptionSecret() {
+        return required(
+                firstNonBlank(load().getProperty("ENCRYPTION_SECRET"), System.getenv("ENCRYPTION_SECRET")),
+                "ENCRYPTION_SECRET");
+    }
+
     public static String firstNonBlank(String... values) {
         for (String value : values) {
             if (value != null && !value.isBlank()) {

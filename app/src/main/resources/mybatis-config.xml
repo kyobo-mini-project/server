@@ -21,5 +21,6 @@
 
   <mappers>
     <mapper resource="mapper/HealthMapper.xml"/>
+    <mapper resource="mapper/UserMapper.xml"/>
   </mappers>
 </configuration>

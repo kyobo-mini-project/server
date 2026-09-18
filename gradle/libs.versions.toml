@@ -5,8 +5,10 @@
 guava = "33.5.0-jre"
 mybatis = "3.5.19"
 postgresql = "42.7.13"
+jbcrypt = "0.4"
 
 [libraries]
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 mybatis = { module = "org.mybatis:mybatis", version.ref = "mybatis" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+jbcrypt = { module = "org.mindrot:jbcrypt", version.ref = "jbcrypt" }
