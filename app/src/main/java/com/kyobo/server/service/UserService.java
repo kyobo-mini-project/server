@@ -1,6 +1,9 @@
 package com.kyobo.server.service;
 
+import java.util.regex.Pattern;
+
 import org.apache.ibatis.session.SqlSession;
+import org.mindrot.jbcrypt.BCrypt;
 
 import com.kyobo.server.config.FieldEncryptor;
 import com.kyobo.server.config.MyBatisConfig;
@@ -8,9 +11,21 @@ import com.kyobo.server.entity.User;
 import com.kyobo.server.mapper.UserMapper;
 
 public class UserService {
+    /** 영문·숫자 각각 1자 이상 포함, 총 8자 이상 (영문·숫자만 허용) */
+    private static final Pattern PASSWORD_PATTERN =
+            Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$");
+
+    /**
+     * 존재하지 않는 아이디일 때도 BCrypt 비교 비용을 맞추기 위한 더미 해시.
+     * (아이디 존재 여부를 응답 시간으로 추측하기 어렵게 함)
+     */
+    private static final String DUMMY_PASSWORD_HASH =
+            BCrypt.hashpw("timing-dummy", BCrypt.gensalt());
+
     public User signUp(String loginId, String password, String name, int age, String phoneNumber) {
         requireNotBlank(loginId, "아이디");
         requireNotBlank(password, "비밀번호");
+        requireValidPassword(password);
         requireNotBlank(name, "이름");
         requireNotBlank(phoneNumber, "전화번호");
         if (age < 0) {
@@ -46,9 +61,40 @@ public class UserService {
         }
     }
 
+    public User signIn(String loginId, String password) {
+        requireNotBlank(loginId, "아이디");
+        requireNotBlank(password, "비밀번호");
+
+        String trimmedLoginId = loginId.trim();
+
+        try (SqlSession session = MyBatisConfig.sqlSessionFactory().openSession()) {
+            UserMapper mapper = session.getMapper(UserMapper.class);
+            User user = mapper.findByLoginId(trimmedLoginId);
+
+            // BCrypt는 호출마다 해시가 달라지므로 DB에서 비밀번호로 직접 조회하면 안 됨.
+            // 유저가 없어도 더미 해시로 matches를 돌려 응답 시간 차이를 줄인다.
+            String hashToCheck = user != null ? user.getUserPw() : DUMMY_PASSWORD_HASH;
+            boolean passwordMatches = FieldEncryptor.matchesPassword(password, hashToCheck);
+            if (user == null || !passwordMatches) {
+                throw new IllegalStateException("아이디 또는 비밀번호를 확인해주세요.");
+            }
+
+            user.setName(FieldEncryptor.decrypt(user.getName()));
+            user.setPhoneNumber(FieldEncryptor.decrypt(user.getPhoneNumber()));
+            user.setUserPw(null);
+            return user;
+        }
+    }
+
     private static void requireNotBlank(String value, String fieldName) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(fieldName + "을(를) 입력해 주세요.");
+        }
+    }
+
+    private static void requireValidPassword(String password) {
+        if (!PASSWORD_PATTERN.matcher(password).matches()) {
+            throw new IllegalArgumentException("비밀번호는 영문과 숫자를 포함해 8자 이상이어야 합니다.");
         }
     }
 }
