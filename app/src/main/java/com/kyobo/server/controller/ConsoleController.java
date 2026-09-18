@@ -6,14 +6,19 @@ import java.util.Scanner;
 import com.kyobo.server.entity.User;
 
 public class ConsoleController {
+    /** readMenuChoice가 관리자 코드로 처리했을 때 반환하는 값 (메뉴 번호와 겹치지 않음) */
+    private static final int ADMIN_MODE_HANDLED = -1;
+
     private final Scanner scanner;
     private final UserController userController;
+    private final AdminController adminController;
     private boolean programRunning = true;
     private User currentUser;
 
     public ConsoleController(Scanner scanner) {
         this.scanner = scanner;
         this.userController = new UserController(scanner);
+        this.adminController = new AdminController(scanner);
     }
 
     public void run() {
@@ -32,7 +37,11 @@ public class ConsoleController {
             try {
                 System.out.println("원하시는 기능을 선택해주세요.");
                 System.out.println("[1. 영화 목록 조회] [2. 로그인] [3. 회원가입] [0. 종료]");
-                int selected = readInt("기능 선택: ");
+                int selected = readMenuChoice("기능 선택: ");
+                if (selected == ADMIN_MODE_HANDLED) {
+                    System.out.println();
+                    continue;
+                }
                 switch (selected) {
                     case 1:
                         // TODO: 영화 목록 조회 구현 후 수정
@@ -68,7 +77,11 @@ public class ConsoleController {
             try {
                 System.out.println("원하시는 기능을 선택해주세요. (" + currentUser.getName() + "님)");
                 System.out.println("[1. 영화 목록 조회] [2. 예매 내역] [3. 로그아웃] [0. 종료]");
-                int selected = readInt("기능 선택: ");
+                int selected = readMenuChoice("기능 선택: ");
+                if (selected == ADMIN_MODE_HANDLED) {
+                    System.out.println();
+                    continue;
+                }
                 switch (selected) {
                     case 1:
                         // TODO: 영화 목록 조회 구현 후 수정
@@ -127,6 +140,23 @@ public class ConsoleController {
             return true;
         }
         return false;
+    }
+
+    /**
+     * 메뉴 번호를 입력받되, 먼저 관리자 코드인지 가로채 확인한다.
+     * 관리자 코드로 처리됐으면 ADMIN_MODE_HANDLED를 반환한다.
+     */
+    private int readMenuChoice(String prompt) {
+        System.out.print(prompt);
+        String input = scanner.nextLine();
+        if (adminController.tryEnterAdminMode(input)) {
+            return ADMIN_MODE_HANDLED;
+        }
+        try {
+            return Integer.parseInt(input.trim());
+        } catch (NumberFormatException e) {
+            throw new InputMismatchException();
+        }
     }
 
     private int readInt(String prompt) {
