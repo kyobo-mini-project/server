@@ -11,6 +11,7 @@ public class ConsoleController {
 
     private final Scanner scanner;
     private final UserController userController;
+    private final MovieController movieController;
     private final AdminController adminController;
     private boolean programRunning = true;
     private User currentUser;
@@ -18,6 +19,7 @@ public class ConsoleController {
     public ConsoleController(Scanner scanner) {
         this.scanner = scanner;
         this.userController = new UserController(scanner);
+        this.movieController = new MovieController(scanner);
         this.adminController = new AdminController(scanner);
     }
 
@@ -44,8 +46,7 @@ public class ConsoleController {
                 }
                 switch (selected) {
                     case 1:
-                        // TODO: 영화 목록 조회 구현 후 수정
-                        System.out.println("영화 목록 조회 구현 필요");
+                        programRunning = movieController.runMovieList();
                         break;
                     case 2:
                         currentUser = userController.runSignIn();
@@ -84,8 +85,7 @@ public class ConsoleController {
                 }
                 switch (selected) {
                     case 1:
-                        // TODO: 영화 목록 조회 구현 후 수정
-                        System.out.println("영화 목록 조회 구현 필요");
+                        programRunning = movieController.runMovieList();
                         break;
                     case 2:
                         // TODO: 예매 내역 조회 구현 후 수정
