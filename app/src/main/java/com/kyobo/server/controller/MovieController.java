@@ -7,6 +7,12 @@ import java.util.Scanner;
 import com.kyobo.server.entity.MovieListItem;
 import com.kyobo.server.service.MovieService;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+
+import com.kyobo.server.common.ApiResponse;
+import com.kyobo.server.entity.Movie;
+
 public class MovieController {
     private final Scanner scanner;
     private final MovieService movieService;
@@ -98,5 +104,78 @@ public class MovieController {
             return false;
         }
         return true;
+    }
+
+    public void runMovieRegistration() {
+        System.out.println("===== 영화 등록 =====");
+
+        String title = readRequiredText("영화 제목: ");
+        int ageLimit = readRegistrationNumber(
+                "관람 가능 나이 (전체 관람가: 0): ", 0);
+        int runningTime = readRegistrationNumber(
+                "상영 시간 (분): ", 1);
+        LocalDate releaseDate = readReleaseDate();
+        String content = readRequiredText("영화 소개: ");
+        String director = readRequiredText("감독: ");
+
+        Movie movie = new Movie();
+        movie.setTitle(title);
+        movie.setAgeLimit(ageLimit);
+        movie.setRunningTime(runningTime);
+        movie.setReleaseDate(releaseDate);
+        movie.setContent(content);
+        movie.setDirector(director);
+
+        ApiResponse<Void> response = movieService.insertMovie(movie);
+        System.out.println(response.getStatusMessage());
+    }
+
+    // 빈 문자열이면 다시 입력받기
+    private String readRequiredText(String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            String input = scanner.nextLine().trim();
+
+            if (input.isEmpty()) {
+                System.out.println("내용을 입력해 주세요.");
+                continue;
+            }
+
+            return input;
+        }
+    }
+
+    // 정수인지, 최솟값 이상인지 검사하기
+    private int readRegistrationNumber(String prompt, int min) {
+        while (true) {
+            String input = readRequiredText(prompt);
+
+            try {
+                int number = Integer.parseInt(input);
+
+                if (number < min) {
+                    System.out.println(min + " 이상의 숫자를 입력해 주세요.");
+                    continue;
+                }
+
+                return number;
+            } catch (NumberFormatException e) {
+                System.out.println("정수를 입력해 주세요.");
+            }
+        }
+    }
+
+    // 실제로 존재하는 날짜인지 검사하기
+    private LocalDate readReleaseDate() {
+        while (true) {
+            String input = readRequiredText("개봉일 (예: 2026-09-30): ");
+
+            try {
+                return LocalDate.parse(input);
+            } catch (DateTimeParseException e) {
+                System.out.println(
+                        "올바른 날짜를 yyyy-MM-dd 형식으로 입력해 주세요.");
+            }
+        }
     }
 }

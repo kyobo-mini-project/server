@@ -72,8 +72,8 @@ public class AdminController {
     }
 
     private void manageMovies() {
-        // TODO: 담당자 구현 예정
-        System.out.println("[영화 관리] 기능은 아직 구현되지 않았습니다.");
+        MovieController movieController = new MovieController(scanner);
+        movieController.runMovieRegistration();
     }
 
     private void manageScreens() {
