@@ -4,14 +4,20 @@ import java.util.Scanner;
 
 import com.kyobo.server.entity.User;
 import com.kyobo.server.service.UserService;
+import com.kyobo.server.service.UserService.WithdrawResult;
+import org.apache.ibatis.exceptions.PersistenceException;
 
 public class UserController {
     private final Scanner scanner;
     private final UserService userService;
 
     public UserController(Scanner scanner) {
+        this(scanner, new UserService());
+    }
+
+    public UserController(Scanner scanner, UserService userService) {
         this.scanner = scanner;
-        this.userService = new UserService();
+        this.userService = userService;
     }
 
     /**
@@ -126,6 +132,70 @@ public class UserController {
                 password = readLine("[PASSWORD] : ");
             }
         }
+    }
+
+    /** @return 탈퇴 완료 또는 유효하지 않은 회원이면 true (세션 해제 필요) */
+    public boolean runWithdraw(User currentUser) {
+        if (currentUser == null) {
+            System.out.println("로그인이 필요합니다.");
+            return false;
+        }
+        System.out.println("===========================================================");
+        System.out.println("회원 탈퇴");
+        System.out.println("-----------------------------------------------------------");
+        try {
+            WithdrawResult result = userService.checkWithdraw(currentUser.getUserId());
+            if (result != WithdrawResult.READY) {
+                return printWithdrawResult(result);
+            }
+            while (true) {
+                String password = readLine("[PASSWORD] : ");
+                if (isBlank(password)) {
+                    printWithdrawResult(WithdrawResult.PASSWORD_REQUIRED);
+                    continue;
+                }
+                result = userService.verifyWithdraw(currentUser.getUserId(), password);
+                if (result == WithdrawResult.READY) {
+                    String answer = readLine("정말 탈퇴하시겠습니까? (탈퇴: 0, 취소: 1) ");
+                    if (!"0".equals(answer.trim())) {
+                        System.out.println("회원 탈퇴를 취소했습니다.");
+                        return false;
+                    }
+                    // 최종 확인 중 변경된 회원 상태와 예매 내역도 다시 검증한다.
+                    result = userService.withdraw(currentUser.getUserId(), password);
+                }
+                boolean logout = printWithdrawResult(result);
+                if (result != WithdrawResult.PASSWORD_REQUIRED && result != WithdrawResult.PASSWORD_MISMATCH) {
+                    return logout;
+                }
+            }
+        } catch (PersistenceException e) {
+            System.out.println("회원 탈퇴 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+            return false;
+        }
+    }
+
+    private boolean printWithdrawResult(WithdrawResult result) {
+        switch (result) {
+            case SUCCESS:
+                System.out.println("회원 탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사합니다.");
+                return true;
+            case INVALID_USER:
+                System.out.println("유효하지 않은 회원정보입니다.");
+                return true;
+            case ACTIVE_BOOKINGS:
+                System.out.println("예매 내역이 존재합니다. 예매를 먼저 취소해주세요.");
+                break;
+            case PASSWORD_REQUIRED:
+                System.out.println("비밀번호를 입력해 주세요.");
+                break;
+            case PASSWORD_MISMATCH:
+                System.out.println("비밀번호가 일치하지 않습니다. 다시 입력해 주세요.");
+                break;
+            default:
+                break;
+        }
+        return false;
     }
 
     private boolean isBlank(String value) {

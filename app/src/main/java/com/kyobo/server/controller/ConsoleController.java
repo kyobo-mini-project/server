@@ -17,10 +17,15 @@ public class ConsoleController {
     private User currentUser;
 
     public ConsoleController(Scanner scanner) {
+        this(scanner, new UserController(scanner), new MovieController(scanner), new AdminController(scanner));
+    }
+
+    public ConsoleController(Scanner scanner, UserController userController,
+                             MovieController movieController, AdminController adminController) {
         this.scanner = scanner;
-        this.userController = new UserController(scanner);
-        this.movieController = new MovieController(scanner);
-        this.adminController = new AdminController(scanner);
+        this.userController = userController;
+        this.movieController = movieController;
+        this.adminController = adminController;
     }
 
     public void run() {
@@ -77,7 +82,7 @@ public class ConsoleController {
         while (programRunning && currentUser != null) {
             try {
                 System.out.println("원하시는 기능을 선택해주세요. (" + currentUser.getName() + "님)");
-                System.out.println("[1. 영화 목록 조회] [2. 예매 내역] [3. 로그아웃] [0. 종료]");
+                System.out.println("[1. 영화 목록 조회] [2. 예매 내역] [3. 로그아웃] [4. 회원 탈퇴] [0. 종료]");
                 int selected = readMenuChoice("기능 선택: ");
                 if (selected == ADMIN_MODE_HANDLED) {
                     System.out.println();
@@ -93,6 +98,11 @@ public class ConsoleController {
                         break;
                     case 3:
                         requestLogout();
+                        break;
+                    case 4:
+                        if (userController.runWithdraw(currentUser)) {
+                            currentUser = null;
+                        }
                         break;
                     case 0:
                         requestExit();

@@ -4,6 +4,20 @@
   "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.kyobo.server.mapper.UserMapper">
 
+  <select id="findById" resultType="com.kyobo.server.entity.User">
+    SELECT user_id, user_pw, is_deleted
+    FROM users
+    WHERE user_id = #{userId}
+  </select>
+
+  <update id="softDelete">
+    UPDATE users
+    SET is_deleted = TRUE,
+        deleted_at = CURRENT_TIMESTAMP
+    WHERE user_id = #{userId}
+      AND is_deleted = FALSE
+  </update>
+
   <select id="findByLoginId" resultType="com.kyobo.server.entity.User">
     SELECT user_id,
            login_id,
