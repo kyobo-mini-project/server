@@ -16,6 +16,20 @@ public class RoomAdmin {
     private Integer screeningId;
     private String rowName;
     private Integer colNum;
+    private String movieTitle;
+    private java.time.LocalDate screeningDate;
+    private java.time.LocalTime startTime;
+
+    public String getMovieTitle() { return movieTitle; }
+    public void setMovieTitle(String movieTitle) { this.movieTitle = movieTitle; }
+
+    public java.time.LocalDate getScreeningDate() { return screeningDate; }
+    public void setScreeningDate(java.time.LocalDate screeningDate) {
+        this.screeningDate = screeningDate;
+    }
+
+    public java.time.LocalTime getStartTime() { return startTime; }
+    public void setStartTime(java.time.LocalTime startTime) { this.startTime = startTime; }
 
     public Integer getRoomId() {
         return roomId;}

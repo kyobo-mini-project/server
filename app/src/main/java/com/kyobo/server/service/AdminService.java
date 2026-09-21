@@ -9,6 +9,8 @@ import com.kyobo.server.entity.Admin;
 import com.kyobo.server.mapper.AdminMapper;
 import java.util.List;
 import com.kyobo.server.entity.RoomAdmin;
+import com.kyobo.server.entity.Seat;
+import com.kyobo.server.mapper.SeatMapper;
 
 public class AdminService {
     public ApiResponse<Admin> findAdminByCode(String code) {
@@ -118,6 +120,37 @@ public class AdminService {
                 session.rollback();
                 throw e;
             }
+        }
+    }
+
+    public List<Seat> getRoomSeats(int cinemaId, int roomId) {
+        try (SqlSession session = MyBatisConfig.sqlSessionFactory().openSession()) {
+            return session.getMapper(SeatMapper.class).findByRoom(cinemaId, roomId);
+        }
+    }
+
+    public RoomResult changeSeat(int cinemaId, int roomId, int seatId, boolean active) {
+        try (SqlSession session = MyBatisConfig.sqlSessionFactory().openSession(false)) {
+            SeatMapper mapper = session.getMapper(SeatMapper.class);
+            Seat seat = mapper.findForUpdate(cinemaId, roomId, seatId);
+            if (seat == null) {
+                return new RoomResult("담당 지점·상영관의 좌석이 아닙니다.", List.of());
+            }
+            if (Boolean.valueOf(active).equals(seat.getActive())) {
+                return new RoomResult("이미 같은 상태입니다.", List.of());
+            }
+            if (!active) {
+                List<RoomAdmin> bookings = mapper.findUpcomingBookings(seatId);
+                if (!bookings.isEmpty()) {
+                    return new RoomResult(
+                            "진행 중이거나 예정된 상영에 예매가 있어 변경할 수 없습니다.", bookings);
+                }
+            }
+            if (mapper.updateActive(seatId, active) != 1) {
+                throw new IllegalStateException("좌석 상태 변경에 실패했습니다.");
+            }
+            session.commit();
+            return new RoomResult("좌석 상태를 변경했습니다.", List.of());
         }
     }
 }

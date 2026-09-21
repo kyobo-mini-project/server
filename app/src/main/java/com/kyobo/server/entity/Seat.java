@@ -5,6 +5,7 @@ public class Seat {
     private Integer roomId;
     private String rowName;
     private Integer colNum;
+    private Boolean active;
     /** 좌석 배치도 조회(findSeatMap) 시에만 채워짐 */
     private Boolean isBooked;
 
@@ -42,6 +43,14 @@ public class Seat {
 
     public Boolean getIsBooked() {
         return isBooked;
+    }
+
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
     }
 
     public void setIsBooked(Boolean isBooked) {

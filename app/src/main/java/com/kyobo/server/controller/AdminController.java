@@ -17,6 +17,7 @@ import com.kyobo.server.entity.Movie;
 import com.kyobo.server.entity.Room;
 import com.kyobo.server.entity.RoomAdmin;
 import com.kyobo.server.entity.Screening;
+import com.kyobo.server.entity.Seat;
 import com.kyobo.server.service.AdminService;
 import com.kyobo.server.service.ScreeningService;
 
@@ -116,14 +117,14 @@ public class AdminController {
                 }
 
                 String menu = readLine(
-                        "[1. 상태 수정] [0. 뒤로가기] : ").trim();
+                        "[1. 상태 수정] [2. 좌석 관리] [0. 뒤로가기] : ").trim();
 
                 // 관리자 메뉴로 돌아가기
                 if ("0".equals(menu)) {
                     return;
                 }
 
-                if (!"1".equals(menu)) {
+                if (!"1".equals(menu) && !"2".equals(menu)) {
                     System.out.println("올바른 번호를 입력하세요.");
                     continue;
                 }
@@ -134,7 +135,7 @@ public class AdminController {
                 }
 
                 int roomId = Integer.parseInt(
-                        readLine("수정할 관 ID (0: 취소): ").trim());
+                        readLine("상영관 ID (0: 취소): ").trim());
 
                 if (roomId == 0) {
                     continue;
@@ -143,6 +144,11 @@ public class AdminController {
                 if (rooms.stream().noneMatch(
                         room -> room.getRoomId().equals(roomId))) {
                     System.out.println("목록에 있는 관 ID를 입력하세요.");
+                    continue;
+                }
+
+                if ("2".equals(menu)) {
+                    manageSeats(admin, roomId);
                     continue;
                 }
 
@@ -237,6 +243,80 @@ public class AdminController {
                 return;
             }
         }
+    }
+
+    private void manageSeats(Admin admin, int roomId) {
+        while (true) {
+            List<Seat> seats = adminService.getRoomSeats(admin.getCinemaId(), roomId);
+            System.out.println("\n[상영관 ID " + roomId + "] 좌석 관리");
+            if (seats.isEmpty()) {
+                System.out.println("등록된 좌석이 없습니다.");
+                return;
+            }
+            printAdminSeatMap(seats);
+
+            String input = readLine("수정할 좌석 (예: A1, 0: 뒤로가기): ").trim();
+            if ("0".equals(input)) return;
+            Seat selectedSeat = seats.stream()
+                    .filter(s -> (s.getRowName().trim() + s.getColNum()).equalsIgnoreCase(input))
+                    .findFirst().orElse(null);
+            if (selectedSeat == null) {
+                System.out.println("배치도에 있는 좌석명을 입력하세요. (예: A1)");
+                continue;
+            }
+            String choice = readLine("[1. 사용 가능] [2. 사용 불가] [0. 취소]: ").trim();
+            if ("0".equals(choice)) continue;
+            if (!"1".equals(choice) && !"2".equals(choice)) {
+                System.out.println("올바른 번호를 입력하세요.");
+                continue;
+            }
+            if (!"Y".equalsIgnoreCase(readLine("변경하시겠습니까? (Y/N): ").trim())) continue;
+            AdminService.RoomResult result = adminService.changeSeat(
+                    admin.getCinemaId(), roomId, selectedSeat.getSeatId(), "1".equals(choice));
+            System.out.println(result.message());
+            for (RoomAdmin booking : result.buyers()) {
+                System.out.printf("예매 번호: %d | 예매자: %s (회원 번호: %d)%n",
+                        booking.getBookingId(), displayText(booking.getLoginId()), booking.getUserId());
+                System.out.printf("상영회차: %d | 영화: %s | 상영일시: %s %s%n",
+                        booking.getScreeningId(), displayText(booking.getMovieTitle()),
+                        booking.getScreeningDate(), formatTime(booking.getStartTime()));
+            }
+        }
+    }
+
+    private void printAdminSeatMap(List<Seat> seats) {
+        Map<String, Map<Integer, Seat>> rows = new java.util.TreeMap<>();
+        int lastColumn = 0;
+        int cellWidth = 6;
+        int rowWidth = 3;
+        for (Seat seat : seats) {
+            String row = seat.getRowName().trim();
+            rows.computeIfAbsent(row, key -> new java.util.TreeMap<>())
+                    .put(seat.getColNum(), seat);
+            lastColumn = Math.max(lastColumn, seat.getColNum());
+            cellWidth = Math.max(cellWidth, displayWidth(row + seat.getColNum()) + 4);
+            rowWidth = Math.max(rowWidth, displayWidth(row) + 2);
+        }
+
+        System.out.println("\n                  [ 스크린 ]");
+        System.out.println("■ 사용 가능   □ 사용 불가      ※ 회차별 예매 여부와는 별개입니다.");
+        System.out.print(" ".repeat(rowWidth));
+        for (int column = 1; column <= lastColumn; column++) {
+            System.out.print(padDisplay(String.valueOf(column), cellWidth));
+        }
+        System.out.println();
+        for (Map.Entry<String, Map<Integer, Seat>> row : rows.entrySet()) {
+            System.out.print(padDisplay(row.getKey(), rowWidth));
+            for (int column = 1; column <= lastColumn; column++) {
+                Seat seat = row.getValue().get(column);
+                String cell = seat == null ? "" :
+                        (Boolean.TRUE.equals(seat.getActive()) ? "■" : "□")
+                                + row.getKey() + seat.getColNum();
+                System.out.print(padDisplay(cell, cellWidth));
+            }
+            System.out.println();
+        }
+        System.out.println();
     }
 
     private void manageShowtimes(Admin admin) {

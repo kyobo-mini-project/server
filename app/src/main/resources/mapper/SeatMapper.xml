@@ -19,4 +19,63 @@
     ORDER BY s.row_name, s.col_num
   </select>
 
+  <select id="findByRoom" resultType="com.kyobo.server.entity.Seat">
+    SELECT s.seat_id, s.room_id, s.row_name, s.col_num, s.is_active AS active
+    FROM seats s
+    JOIN rooms r ON r.room_id = s.room_id
+    WHERE r.cinema_id = #{cinemaId} AND r.room_id = #{roomId}
+    ORDER BY s.row_name, s.col_num
+  </select>
+
+  <select id="findForUpdate" resultType="com.kyobo.server.entity.Seat">
+    SELECT s.seat_id, s.room_id, s.row_name, s.col_num, s.is_active AS active
+    FROM seats s
+    JOIN rooms r ON r.room_id = s.room_id
+    WHERE r.cinema_id = #{cinemaId} AND r.room_id = #{roomId}
+      AND s.seat_id = #{seatId}
+    FOR UPDATE OF s
+  </select>
+
+  <select id="findUpcomingBookings" resultType="com.kyobo.server.entity.RoomAdmin">
+      SELECT b.booking_id, b.user_id, u.login_id,
+             sc.screening_id, sc.screening_date, sc.start_time,
+             m.title AS movie_title
+      FROM booked_seats bs
+      JOIN bookings b ON b.booking_id = bs.booking_id
+      JOIN screenings sc ON sc.screening_id = bs.screening_id
+      LEFT JOIN users u ON u.user_id = b.user_id
+      LEFT JOIN movies m ON m.movie_id = sc.movie_id
+      WHERE bs.seat_id = #{seatId} AND b.booking_status = 'DONE'
+        AND sc.screening_date + sc.end_time
+            + CASE WHEN sc.end_time &lt;= sc.start_time
+                   THEN INTERVAL '1 day' ELSE INTERVAL '0 days' END
+            > (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')
+      ORDER BY sc.screening_date, sc.start_time, b.booking_id
+  </select>
+
+  <update id="updateActive">
+    UPDATE seats SET is_active = #{active} WHERE seat_id = #{seatId}
+  </update>
+
+  <select id="findBookableForUpdate" resultType="com.kyobo.server.entity.Seat">
+    SELECT s.seat_id, s.room_id, s.row_name, s.col_num
+    FROM seats s
+    JOIN rooms r ON r.room_id = s.room_id
+    JOIN screenings sc ON sc.room_id = r.room_id AND sc.cinema_id = r.cinema_id
+    WHERE sc.screening_id = #{screeningId}
+      AND r.is_active = TRUE AND s.is_active = TRUE
+      AND
+      <choose>
+        <when test="seatIds != null and !seatIds.isEmpty()">
+          s.seat_id IN
+          <foreach collection="seatIds" item="id" open="(" separator="," close=")">
+            #{id}
+          </foreach>
+        </when>
+        <otherwise>FALSE</otherwise>
+      </choose>
+    ORDER BY s.seat_id
+    FOR UPDATE OF s
+  </select>
+
 </mapper>
