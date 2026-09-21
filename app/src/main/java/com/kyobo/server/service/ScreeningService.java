@@ -61,6 +61,9 @@ public class ScreeningService {
         if (startTime == null) {
             throw new IllegalArgumentException("시작 시간을 입력해 주세요.");
         }
+        if (startTime.isBefore(LocalTime.of(6, 0))) {
+            throw new IllegalArgumentException("상영 시작 시간은 조조 기준 06:00부터 입력할 수 있습니다.");
+        }
 
         try (SqlSession session = MyBatisConfig.sqlSessionFactory().openSession()) {
             MovieMapper movieMapper = session.getMapper(MovieMapper.class);

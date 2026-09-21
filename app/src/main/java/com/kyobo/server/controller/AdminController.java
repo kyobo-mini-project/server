@@ -161,7 +161,7 @@ public class AdminController {
         }
 
         while (true) {
-            LocalTime startTime = readTime("시작 시간 (예: 14:30, 0: 취소): ");
+            LocalTime startTime = readTime("시작 시간 (조조 06:00~, 예: 06:30, 0: 취소): ");
             if (startTime == null) {
                 return;
             }
