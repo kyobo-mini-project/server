@@ -139,16 +139,16 @@ public class AdminController {
         System.out.println("===== [" + cinemaName + "] " + date + " 상영회차 =====");
 
         if (rooms == null || rooms.isEmpty()) {
-            System.out.println("(상영 없음)");
+            System.out.println("상영 없음");
             return;
         }
 
         Map<Integer, List<Screening>> byRoom = groupByRoom(screenings);
         for (Room room : rooms) {
-            System.out.println("[" + room.getRoomName() + "]");
+            System.out.println("[" + displayText(room.getRoomName()).trim() + "]");
             List<Screening> roomScreenings = byRoom.getOrDefault(room.getRoomId(), List.of());
             if (roomScreenings.isEmpty()) {
-                System.out.println("(상영 없음)");
+                System.out.println("상영 없음");
                 continue;
             }
             for (Screening screening : roomScreenings) {
