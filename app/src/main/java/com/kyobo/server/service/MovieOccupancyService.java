@@ -56,7 +56,8 @@ public class MovieOccupancyService {
     }
 
     /**
-     * 점유율 높은 순 순위 (1부터). 동점이면 movieId 오름차순.
+     * 점유율 높은 순 순위 (1부터).
+     * 점유율이 같으면 영화 번호와 관계없이 같은 순위로 처리한다. (공동 순위)
      */
     public int getOccupancyRank(int movieId) {
         List<MovieOccupancy> rankings = new ArrayList<>(getAllOccupancies());
@@ -71,20 +72,22 @@ public class MovieOccupancyService {
             rankings.add(getOccupancy(movieId));
         }
 
-        rankings.sort((left, right) -> {
-            int byRate = Double.compare(right.getOccupancyRate(), left.getOccupancyRate());
-            if (byRate != 0) {
-                return byRate;
-            }
-            return Integer.compare(left.getMovieId(), right.getMovieId());
-        });
+        rankings.sort((left, right) ->
+                Double.compare(right.getOccupancyRate(), left.getOccupancyRate()));
 
+        int currentRank = 1;
         for (int i = 0; i < rankings.size(); i++) {
+            if (i > 0
+                    && Double.compare(
+                            rankings.get(i).getOccupancyRate(),
+                            rankings.get(i - 1).getOccupancyRate()) != 0) {
+                currentRank = i + 1;
+            }
             if (rankings.get(i).getMovieId() == movieId) {
-                return i + 1;
+                return currentRank;
             }
         }
-        return rankings.size();
+        return currentRank;
     }
 
     private static Map<Integer, Long> toCountMap(List<MovieSeatCount> rows) {
