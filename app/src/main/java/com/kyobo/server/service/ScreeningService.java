@@ -87,9 +87,6 @@ public class ScreeningService {
             }
 
             LocalTime endTime = startTime.plusMinutes(movie.getRunningTime());
-            if (!endTime.isAfter(startTime)) {
-                throw new IllegalArgumentException("상영 종료 시간이 당일을 넘어갑니다. 시작 시간을 다시 확인해 주세요.");
-            }
 
             int overlaps = screeningMapper.countOverlaps(roomId, date, startTime, endTime);
             if (overlaps > 0) {
