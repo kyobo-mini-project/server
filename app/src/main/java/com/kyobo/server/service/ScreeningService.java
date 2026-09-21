@@ -49,7 +49,7 @@ public class ScreeningService {
     /**
      * 상영회차를 등록한다.
      * endTime = startTime + runningTime(분)
-     * 같은 관에서 시간 겹침 또는 정비시간(종료 후 30분) 미확보 시 실패한다.
+     * 같은 관에서 시간 겹침 또는 정비시간(종료 후 60분) 미확보 시 실패한다.
      */
     public Screening createScreening(
             int cinemaId,
@@ -66,6 +66,9 @@ public class ScreeningService {
         }
         if (startTime.isBefore(LocalTime.of(6, 0))) {
             throw new IllegalArgumentException("상영 시작 시간은 조조 기준 06:00부터 입력할 수 있습니다.");
+        }
+        if (startTime.getMinute() != 0 && startTime.getMinute() != 30) {
+            throw new IllegalArgumentException("시작 시간은 정각 또는 30분 단위로 입력해 주세요. (예: 14:00, 14:30)");
         }
         if (!LocalDateTime.of(date, startTime).isAfter(LocalDateTime.now(SEOUL))) {
             throw new IllegalArgumentException("이미 지난 날짜와 시간에는 상영회차를 등록할 수 없습니다.");

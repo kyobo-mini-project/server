@@ -57,9 +57,9 @@
   </select>
 
   <!--
-    심야(자정 넘김) 포함 겹침 검사 + 정비시간 30분.
+    심야(자정 넘김) 포함 겹침 검사 + 정비시간 60분.
     end_time <= start_time 이면 종료는 다음날로 본다.
-    이전 회차 종료 후 30분이 지나야 다음 회차 시작 가능.
+    이전 회차 종료 후 60분이 지나야 다음 회차 시작 가능.
   -->
   <select id="countOverlaps" resultType="int">
     SELECT COUNT(*)
@@ -70,12 +70,12 @@
                WHEN #{endTime} &gt; #{startTime}
                  THEN (CAST(#{date} AS date) + #{endTime})
                ELSE ((CAST(#{date} AS date) + 1) + #{endTime})
-             END) + INTERVAL '30 minutes')
+             END) + INTERVAL '60 minutes')
       AND ((CASE
              WHEN s.end_time &gt; s.start_time
                THEN (s.screening_date + s.end_time)
              ELSE ((s.screening_date + 1) + s.end_time)
-           END) + INTERVAL '30 minutes')
+           END) + INTERVAL '60 minutes')
           &gt; (CAST(#{date} AS date) + #{startTime})
   </select>
 
