@@ -36,11 +36,20 @@ public class AdminService {
         }
     }
 
-    public record RoomResult(String message, List<RoomAdmin> buyers) {}
+    public record RoomResult(
+            String message,
+            List<RoomAdmin> buyers,
+            List<RoomAdmin> seats) {
+
+        public RoomResult(String message, List<RoomAdmin> buyers) {
+            this(message, buyers, List.of());
+        }
+    }
 
     public List<RoomAdmin> getRooms(int cinemaId) {
         try (SqlSession session =
                      MyBatisConfig.sqlSessionFactory().openSession()) {
+
             return session.getMapper(AdminMapper.class)
                     .findRoomsByCinemaId(cinemaId);
         }
@@ -72,6 +81,14 @@ public class AdminService {
                     List<RoomAdmin> buyers = mapper.findBookedBuyers(cinemaId, roomId);
 
                     if (!buyers.isEmpty()) {
+                        List<Integer> bookingIds = buyers.stream()
+                                .map(RoomAdmin::getBookingId)
+                                .distinct()
+                                .toList();
+
+                        List<RoomAdmin> seats =
+                                mapper.findSeatsByBookingIds(bookingIds);
+
                         session.rollback();
 
                         for (RoomAdmin buyer : buyers) {
@@ -84,7 +101,9 @@ public class AdminService {
                         }
 
                         return new RoomResult(
-                                "예매자가 있어 운영 불가로 변경할 수 없습니다.", buyers);
+                                "예매자가 있어 운영 불가로 변경할 수 없습니다.",
+                                buyers,
+                                seats);
                     }
                 }
 

@@ -25,4 +25,7 @@ public interface AdminMapper {
             @Param("cinemaId") int cinemaId,
             @Param("roomId") int roomId,
             @Param("active") boolean active);
+
+    List<RoomAdmin> findSeatsByBookingIds(
+            @Param("bookingIds") List<Integer> bookingId);
 }

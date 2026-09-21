@@ -36,30 +36,44 @@
 
     <select id="findBookedBuyers"
             resultType="com.kyobo.server.entity.RoomAdmin">
-        SELECT u.login_id,
+        SELECT b.booking_id,
+        u.user_id,
+        u.login_id,
         u.phone_number,
-        COUNT(bs.booked_seat_id) AS seat_count,
-        STRING_AGG(
-        '회차 ' || s.screening_id::text
-        || ': ' || TRIM(st.row_name) || '열 '
-        || st.col_num::text || '번',
-        ', ' ORDER BY s.screening_id, st.row_name, st.col_num
-        ) AS seat_locations
+        s.screening_id
         FROM bookings b
         JOIN screenings s ON s.screening_id = b.screening_id
         JOIN rooms r ON r.room_id = s.room_id
         JOIN users u ON u.user_id = b.user_id
-        LEFT JOIN booked_seats bs
-        ON bs.booking_id = b.booking_id
-        AND bs.screening_id = s.screening_id
-        LEFT JOIN seats st
-        ON st.seat_id = bs.seat_id
-        AND st.room_id = r.room_id
         WHERE r.cinema_id = #{cinemaId}
         AND r.room_id = #{roomId}
         AND b.booking_status = 'DONE'
-        GROUP BY u.user_id, u.login_id, u.phone_number
-        ORDER BY u.login_id
+        ORDER BY u.login_id, s.screening_id, b.booking_id
+    </select>
+
+    <select id="findSeatsByBookingIds"
+            resultType="com.kyobo.server.entity.RoomAdmin">
+        SELECT bs.booking_id,
+        bs.booked_seat_id,
+        bs.screening_id,
+        st.row_name,
+        st.col_num
+        FROM booked_seats bs
+        JOIN seats st ON st.seat_id = bs.seat_id
+        WHERE
+        <choose>
+            <when test="bookingIds != null and bookingIds.size() > 0">
+                bs.booking_id IN
+                <foreach collection="bookingIds" item="id"
+                         open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </when>
+            <otherwise>
+                FALSE
+            </otherwise>
+        </choose>
+        ORDER BY bs.booking_id, st.row_name, st.col_num
     </select>
 
     <update id="updateRoomActive">

@@ -169,44 +169,62 @@ public class AdminController {
                         admin.getCinemaId(), roomId, "1".equals(choice));
 
                 System.out.println(result.message());
-                for (RoomAdmin buyer : result.buyers()) {
-                    System.out.printf(
-                            "아이디: %s | 전화번호: %s | 예매 좌석: %d개%n",
-                            buyer.getLoginId(),
-                            buyer.getPhoneNumber(),
-                            buyer.getSeatCount());
-
-                    String locations = buyer.getSeatLocations();
-
-                    if (locations == null || locations.isBlank()) {
-                        System.out.println("좌석 정보 확인 필요");
-                        continue;
-                    }
 
 
-                    Map<String, List<String>> seatsByScreening = new LinkedHashMap<>();
+                Map<Integer, List<RoomAdmin>> seatsByBooking = new LinkedHashMap<>();
 
-                    for (String item : locations.split(",\\s*")) {
-                        String[] parts = item.split(":", 2);
+                for (RoomAdmin seat : result.seats()) {
+                    seatsByBooking
+                            .computeIfAbsent(seat.getBookingId(), key -> new ArrayList<>())
+                            .add(seat);
+                }
 
-                        if (parts.length != 2) {
+
+                Map<Integer, List<RoomAdmin>> bookingsByUser = new LinkedHashMap<>();
+
+                for (RoomAdmin booking : result.buyers()) {
+                    bookingsByUser
+                            .computeIfAbsent(booking.getUserId(), key -> new ArrayList<>())
+                            .add(booking);
+                }
+
+                for (List<RoomAdmin> bookings : bookingsByUser.values()) {
+                    RoomAdmin buyer = bookings.get(0);
+                    Map<Integer, List<String>> seatsByScreening = new LinkedHashMap<>();
+                    int seatCount = 0;
+
+                    for (RoomAdmin booking : bookings) {
+                        List<RoomAdmin> seats = seatsByBooking.getOrDefault(
+                                booking.getBookingId(), List.of());
+
+                        List<String> labels = seatsByScreening.computeIfAbsent(
+                                booking.getScreeningId(), key -> new ArrayList<>());
+
+                        if (seats.isEmpty()) {
+                            labels.add("좌석 정보 확인 필요");
                             continue;
                         }
 
-                        String screening = parts[0].trim();
-                        String seat = parts[1].trim()
-                                .replace("열 ", "")
-                                .replace("번", "");
+                        for (RoomAdmin seat : seats) {
+                            seatCount++;
 
-                        seatsByScreening
-                                .computeIfAbsent(screening, key -> new ArrayList<>())
-                                .add(seat);
+                            if (seat.getRowName() == null || seat.getColNum() == null) {
+                                labels.add("좌석 정보 확인 필요");
+                            } else {
+                                labels.add(seat.getRowName().trim() + seat.getColNum());
+                            }
+                        }
                     }
+
+                    System.out.printf(
+                            "아이디: %s | 전화번호: %s | 예매 좌석: %d개%n",
+                            buyer.getLoginId(), buyer.getPhoneNumber(), seatCount);
 
                     System.out.println("좌석:");
 
-                    seatsByScreening.forEach((screening, seats) ->
-                            System.out.println(screening + ": " + String.join(", ", seats)));
+                    seatsByScreening.forEach((screeningId, seats) ->
+                            System.out.println(
+                                    "회차 " + screeningId + ": " + String.join(", ", seats)));
 
                     System.out.println();
                 }
