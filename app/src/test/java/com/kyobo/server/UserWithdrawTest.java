@@ -178,10 +178,13 @@ class UserWithdrawTest {
                 }
                 throw new AssertionError(method.getName());
             });
-            BookingMapper bookings = userId -> {
-                bookingChecks++;
-                return blockOnThirdCheck && bookingChecks >= 3 ? 1 : activeBookings;
-            };
+            BookingMapper bookings = proxy(BookingMapper.class, (p, method, args) -> {
+                if (method.getName().equals("findActiveBookingsByUserId")) {
+                    bookingChecks++;
+                    return blockOnThirdCheck && bookingChecks >= 3 ? 1 : activeBookings;
+                }
+                throw new AssertionError(method.getName());
+            });
             SqlSession session = proxy(SqlSession.class, (p, method, args) -> {
                 if (method.getName().equals("getMapper")) return args[0] == UserMapper.class ? users : bookings;
                 if (List.of("commit", "rollback", "close").contains(method.getName())) {
