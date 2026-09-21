@@ -16,4 +16,33 @@
       AND b.booking_status = 'DONE'
       AND (s.screening_date + s.start_time) > CURRENT_TIMESTAMP
   </select>
+
+  <select id="findByUser" resultType="com.kyobo.server.entity.Booking">
+    SELECT b.booking_id,
+           b.user_id,
+           b.movie_id,
+           b.screening_id,
+           b.booking_status,
+           b.booking_date,
+           m.title AS movie_title,
+           s.screening_date,
+           s.start_time,
+           c.cinema_name,
+           r.room_name,
+           r.floor,
+           (SELECT string_agg(st.row_name || st.col_num, ', ' ORDER BY st.row_name, st.col_num)
+            FROM booked_seats bs
+            JOIN seats st ON st.seat_id = bs.seat_id
+            WHERE bs.booking_id = b.booking_id) AS seat_codes
+    FROM bookings b
+    JOIN screenings s ON s.screening_id = b.screening_id
+    JOIN cinemas c ON c.cinema_id = s.cinema_id
+    JOIN rooms r ON r.room_id = s.room_id
+    JOIN movies m ON m.movie_id = b.movie_id
+    WHERE b.user_id = #{userId}
+      AND (s.screening_date, s.start_time)
+          >= ((now() AT TIME ZONE 'Asia/Seoul')::date, (now() AT TIME ZONE 'Asia/Seoul')::time)
+    ORDER BY s.screening_date, s.start_time
+  </select>
+
 </mapper>
