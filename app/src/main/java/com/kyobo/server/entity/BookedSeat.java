@@ -5,6 +5,7 @@ public class BookedSeat {
     private Integer bookingId;
     private Integer seatId;
     private Integer screeningId;
+    private Boolean isActive;
 
     public Integer getBookedSeatId() {
         return bookedSeatId;
@@ -36,5 +37,13 @@ public class BookedSeat {
 
     public void setScreeningId(Integer screeningId) {
         this.screeningId = screeningId;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
     }
 }

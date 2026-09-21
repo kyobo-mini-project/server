@@ -8,4 +8,6 @@ public interface BookingMapper {
     int findActiveBookingsByUserId(Integer userId);
 
     java.util.List<Booking> findByUser(int userId);
+    
+    int cancel(int bookingId);
 }

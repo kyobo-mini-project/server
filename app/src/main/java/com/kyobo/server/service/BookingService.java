@@ -65,13 +65,18 @@ public class BookingService {
                 bookedSeat.setBookingId(booking.getBookingId());
                 bookedSeat.setSeatId(seat.getSeatId());
                 bookedSeat.setScreeningId(screeningId);
-                bookedSeatMapper.insert(bookedSeat);
+
+                int updated = bookedSeatMapper.upsert(bookedSeat);
+                if (updated == 0) {
+                    session.rollback();
+                    return ApiResponse.fail("03", "이미 예매가 된 좌석입니다. 다른 좌석을 선택해 주세요.");
+                }
             }
 
             session.commit();
             return ApiResponse.success(null);
         } catch (PersistenceException e) {
-            return ApiResponse.fail("03", "이미 다른 예매로 선점된 좌석이 있어 예매에 실패했습니다. 다시 선택해 주세요.");
+            return ApiResponse.fail("03", "이미 예매가 된 좌석입니다. 다른 좌석을 선택해 주세요.");
         } catch (Exception e) {
             return ApiResponse.error("예매 처리 중 오류가 발생했습니다.");
         }
@@ -84,6 +89,24 @@ public class BookingService {
             return ApiResponse.success(bookings);
         } catch (Exception e) {
             return ApiResponse.error("예매 내역 조회 중 오류가 발생했습니다.");
+        }
+    }
+
+    public ApiResponse<Void> cancelBooking(int bookingId) {
+        try (SqlSession session = MyBatisConfig.sqlSessionFactory().openSession()) {
+            BookingMapper bookingMapper = session.getMapper(BookingMapper.class);
+            BookedSeatMapper bookedSeatMapper = session.getMapper(BookedSeatMapper.class);
+
+            int updated = bookingMapper.cancel(bookingId);
+            if (updated == 0) {
+                return ApiResponse.fail("04", "이미 취소되었거나 존재하지 않는 예매입니다.");
+            }
+            bookedSeatMapper.deactivateByBooking(bookingId);
+
+            session.commit();
+            return ApiResponse.success(null);
+        } catch (Exception e) {
+            return ApiResponse.error("예매 취소 중 오류가 발생했습니다.");
         }
     }
 }

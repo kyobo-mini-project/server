@@ -4,9 +4,18 @@
   "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.kyobo.server.mapper.BookedSeatMapper">
 
-  <insert id="insert" useGeneratedKeys="true" keyProperty="bookedSeatId" keyColumn="booked_seat_id">
-    INSERT INTO booked_seats (booking_id, seat_id, screening_id)
-    VALUES (#{bookingId}, #{seatId}, #{screeningId})
+  <insert id="upsert">
+    INSERT INTO booked_seats (booking_id, seat_id, screening_id, is_active)
+    VALUES (#{bookingId}, #{seatId}, #{screeningId}, TRUE)
+    ON CONFLICT (screening_id, seat_id) DO UPDATE
+    SET booking_id = EXCLUDED.booking_id, is_active = TRUE
+    WHERE booked_seats.is_active = FALSE
   </insert>
+
+  <update id="deactivateByBooking">
+    UPDATE booked_seats
+    SET is_active = FALSE
+    WHERE booking_id = #{bookingId}
+  </update>
 
 </mapper>

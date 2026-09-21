@@ -13,7 +13,7 @@
     FROM seats s
     LEFT JOIN booked_seats bs
            ON bs.seat_id = s.seat_id
-          AND bs.screening_id = #{screeningId}
+          AND bs.screening_id = #{screeningId} AND bs.is_active = TRUE
     WHERE s.room_id = #{roomId}
       AND s.is_active = TRUE
     ORDER BY s.row_name, s.col_num

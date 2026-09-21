@@ -115,6 +115,7 @@ CREATE TABLE IF NOT EXISTS booked_seats (
     booking_id     INTEGER NOT NULL,
     seat_id        INTEGER NOT NULL,
     screening_id   INTEGER NOT NULL,
+    is_active      BOOLEAN NOT NULL DEFAULT TRUE,
     CONSTRAINT fk_booked_seats_booking
         FOREIGN KEY (booking_id)
         REFERENCES bookings (booking_id)

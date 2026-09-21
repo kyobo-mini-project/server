@@ -24,7 +24,7 @@ import com.kyobo.server.service.BookingService;
 
 /**
  * 영화 상세조회에서 영화가 정해진 상태로 호출되는 예매 화면.
- * 로그인된 사용자만 진입한다는 전제이므로, 비로그인 체크는 호출하는 쪽(상세조회) 책임이다.
+ * 로그인된 사용자만 접근 가능하며, 로그인 화면에서 예매를 선택하면 로그인 후 이 컨트롤러로 돌아온다.
  *
  * 흐름: 영화관 선택 -> 날짜 선택 -> 상영회차 선택 -> 좌석 수 입력 -> 좌석 선택 -> 예매확인서.
  * (한 영화가 여러 영화관·한 달 가까이 상영되므로, 영화관과 날짜를 먼저 좁혀야 상영회차 목록이 감당할 만한 길이가 된다.)
@@ -134,24 +134,30 @@ public class BookingController {
             System.out.println(historyResponse.getStatusMessage());
             return;
         }
-        List<Booking> bookings = historyResponse.getData();
+        List<Booking> bookings = new ArrayList<>(historyResponse.getData());
         if (bookings.isEmpty()) {
             System.out.println("예매 내역이 없습니다.");
             return;
         }
 
         while (true) {
-            Booking selected = chooseFromList(bookings, "예매 내역을 선택하세요. (0: 이전 화면으로)",
+            if (bookings.isEmpty()) {
+                System.out.println("예매 내역이 없습니다.");
+                return;
+            }
+            Booking selected = chooseFromList(bookings, "예매 내역을 선택하세요. [0: 이전 화면으로]",
                     b -> b.getMovieTitle() + " / " + b.getCinemaName() + " / " + b.getScreeningDate() + " "
                             + b.getStartTime() + " / 좌석: " + b.getSeatCodes());
             if (selected == null) {
                 return;
             }
-            printBookingDetail(selected);
+            if (printBookingDetail(selected)) {
+                bookings.remove(selected);
+            }
         }
     }
 
-    private void printBookingDetail(Booking booking) {
+    private boolean printBookingDetail(Booking booking) {
         System.out.println();
         System.out.println(DIVIDER);
         System.out.println("예매 번호: " + booking.getBookingId());
@@ -160,18 +166,28 @@ public class BookingController {
         System.out.println(booking.getCinemaName() + " " + booking.getFloor() + "층 " + booking.getRoomName());
         System.out.println(booking.getSeatCodes());
         System.out.println(booking.getScreeningDate() + " " + booking.getStartTime());
-        System.out.println("예매 상태: " + statusLabel(booking.getBookingStatus()));
+        System.out.println("예매 상태: 예매완료");
         System.out.println(DIVIDER);
 
-        String input = readLine("1: 예매 취소, 0: 목록으로 돌아가기: ");
-        if (input.equals("1")) {
-            // TODO: 예매 취소 기능 구현 예정
-            System.out.println("예매 취소 기능은 준비 중입니다.");
+        System.out.println("[1: 예매 취소] [0: 목록으로 돌아가기]");
+        String input = readLine("기능 선택: ");
+        if (!input.equals("1")) {
+            return false;
         }
-    }
 
-    private String statusLabel(String status) {
-        return "CANCELED".equals(status) ? "예매 취소" : "예매완료";
+        System.out.println("[1: 취소 확정] [0: 돌아가기]");
+        String confirm = readLine("정말 취소하시겠습니까? ");
+        if (!confirm.equals("1")) {
+            return false;
+        }
+
+        ApiResponse<Void> response = bookingService.cancelBooking(booking.getBookingId());
+        if (!response.isSuccess()) {
+            System.out.println(response.getStatusMessage());
+            return false;
+        }
+        System.out.println("예매가 취소되었습니다.");
+        return true;
     }
 
     /** @return 선택한 날짜, 0 입력 시 null (이전 단계로) */
@@ -181,7 +197,7 @@ public class BookingController {
 
         while (true) {
             System.out.println();
-            System.out.println("관람 날짜를 입력하세요. (관람 가능 기간: " + minDate + " ~ " + maxDate + ") (0: 이전 단계로)");
+            System.out.println("관람 날짜를 입력하세요. (관람 가능 기간: " + minDate + " ~ " + maxDate + ") [0: 이전 단계로]");
             String input = readLine("날짜 (예: 2026-09-15): ");
             if (input.equals("0")) {
                 return null;
@@ -196,12 +212,12 @@ public class BookingController {
 
     /** @return 선택한 영화관, 0 입력 시 null (예매 취소) */
     private Cinema chooseCinema(List<Cinema> cinemas) {
-        return chooseFromList(cinemas, "영화관을 선택하세요. (0: 취소)", Cinema::getCinemaName);
+        return chooseFromList(cinemas, "영화관을 선택하세요. [0: 취소]", Cinema::getCinemaName);
     }
 
     /** @return 선택한 상영회차, 0 입력 시 null (이전 단계로) */
     private Screening chooseScreening(List<Screening> screenings) {
-        String header = screenings.get(0).getScreeningDate() + " 상영회차를 선택하세요. (0: 이전 단계로)";
+        String header = screenings.get(0).getScreeningDate() + " 상영회차를 선택하세요. [0: 이전 단계로]";
         return chooseFromList(screenings, header,
                 s -> s.getStartTime() + "~" + s.getEndTime() + " (" + s.getRoomName() + ")");
     }
@@ -229,7 +245,7 @@ public class BookingController {
     /** @return 예매할 좌석 수, 0 입력 시 -1 (이전 단계로) */
     private int readSeatCount() {
         while (true) {
-            String input = readLine("예매할 좌석 수를 입력하세요. (0: 이전 단계로): ");
+            String input = readLine("예매할 좌석 수를 입력하세요. [0: 이전 단계로]: ");
             if (input.equals("0")) {
                 return -1;
             }
@@ -257,7 +273,7 @@ public class BookingController {
         while (true) {
             printSeatMap(seatMap);
 
-            String input = readLine("예매할 좌석 코드를 콤마로 구분해 입력하세요. (예: C3,C4,C5) (0: 이전 단계로): ");
+            String input = readLine("예매할 좌석 코드를 콤마로 구분해 입력하세요. (예: C3,C4,C5) [0: 이전 단계로]: ");
             if (input.equals("0")) {
                 return null;
             }
@@ -357,7 +373,8 @@ public class BookingController {
         System.out.println(screening.getScreeningDate() + " " + screening.getStartTime());
         System.out.println(DIVIDER);
 
-        String input = readLine("0을 입력하면 홈으로 돌아갑니다: ");
+        System.out.println("[0: 홈으로 돌아가기]");
+        String input = readLine("기능 선택: ");
         if (input.equals("0")) {
             throw new GoHomeSignal();
         }
