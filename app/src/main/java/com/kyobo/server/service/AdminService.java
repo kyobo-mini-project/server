@@ -38,13 +38,36 @@ public class AdminService {
         }
     }
 
-    public record RoomResult(
-            String message,
+    public enum RoomChangeStatus {
+        SUCCESS,
+        NOT_FOUND,
+        SAME_STATUS,
+        HAS_BOOKINGS
+    }
+
+    public record RoomChangeResult(
+            RoomChangeStatus status,
             List<RoomAdmin> buyers,
             List<RoomAdmin> seats) {
 
-        public RoomResult(String message, List<RoomAdmin> buyers) {
-            this(message, buyers, List.of());
+        public RoomChangeResult(RoomChangeStatus status) {
+            this(status, List.of(), List.of());
+        }
+    }
+
+    public enum SeatChangeStatus {
+        SUCCESS,
+        NOT_FOUND,
+        SAME_STATUS,
+        HAS_BOOKINGS
+    }
+
+    public record SeatChangeResult(
+            SeatChangeStatus status,
+            List<RoomAdmin> bookings) {
+
+        public SeatChangeResult(SeatChangeStatus status) {
+            this(status, List.of());
         }
     }
 
@@ -57,7 +80,7 @@ public class AdminService {
         }
     }
 
-    public RoomResult changeRoom(int cinemaId, int roomId, boolean active) {
+    public RoomChangeResult changeRoom(int cinemaId, int roomId, boolean active) {
         try (SqlSession session =
                      MyBatisConfig.sqlSessionFactory().openSession(false)) {
             try {
@@ -71,12 +94,11 @@ public class AdminService {
 
                 if (room == null) {
                     session.rollback();
-                    return new RoomResult("해당 지점의 상영관이 아닙니다.", List.of());
-                }
+                    return new RoomChangeResult(RoomChangeStatus.NOT_FOUND);                }
 
                 if (Boolean.valueOf(active).equals(room.getActive())) {
                     session.rollback();
-                    return new RoomResult("이미 같은 상태입니다.", List.of());
+                    return new RoomChangeResult(RoomChangeStatus.SAME_STATUS);
                 }
 
                 if (!active) {
@@ -102,10 +124,11 @@ public class AdminService {
                             }
                         }
 
-                        return new RoomResult(
-                                "예매자가 있어 운영 불가로 변경할 수 없습니다.",
+                        return new RoomChangeResult(
+                                RoomChangeStatus.HAS_BOOKINGS,
                                 buyers,
-                                seats);
+                                seats
+                        );
                     }
                 }
 
@@ -114,7 +137,10 @@ public class AdminService {
                 }
 
                 session.commit();
-                return new RoomResult("상태를 변경했습니다.", List.of());
+
+                return new RoomChangeResult(
+                        RoomChangeStatus.SUCCESS
+                );
 
             } catch (RuntimeException e) {
                 session.rollback();
@@ -129,28 +155,59 @@ public class AdminService {
         }
     }
 
-    public RoomResult changeSeat(int cinemaId, int roomId, int seatId, boolean active) {
-        try (SqlSession session = MyBatisConfig.sqlSessionFactory().openSession(false)) {
-            SeatMapper mapper = session.getMapper(SeatMapper.class);
-            Seat seat = mapper.findForUpdate(cinemaId, roomId, seatId);
-            if (seat == null) {
-                return new RoomResult("담당 지점·상영관의 좌석이 아닙니다.", List.of());
-            }
-            if (Boolean.valueOf(active).equals(seat.getActive())) {
-                return new RoomResult("이미 같은 상태입니다.", List.of());
-            }
-            if (!active) {
-                List<RoomAdmin> bookings = mapper.findUpcomingBookings(seatId);
-                if (!bookings.isEmpty()) {
-                    return new RoomResult(
-                            "진행 중이거나 예정된 상영에 예매가 있어 변경할 수 없습니다.", bookings);
+    public SeatChangeResult changeSeat(
+            int cinemaId,
+            int roomId,
+            int seatId,
+            boolean active) {
+
+        try (SqlSession session =
+                     MyBatisConfig.sqlSessionFactory().openSession(false)) {
+
+            try {
+                SeatMapper mapper = session.getMapper(SeatMapper.class);
+
+                Seat seat = mapper.findForUpdate(cinemaId, roomId, seatId);
+
+                if (seat == null) {
+                    session.rollback();
+                    return new SeatChangeResult(
+                            SeatChangeStatus.NOT_FOUND);
                 }
+
+                if (Boolean.valueOf(active).equals(seat.getActive())) {
+                    session.rollback();
+                    return new SeatChangeResult(
+                            SeatChangeStatus.SAME_STATUS);
+                }
+
+                if (!active) {
+                    List<RoomAdmin> bookings =
+                            mapper.findUpcomingBookings(seatId);
+
+                    if (!bookings.isEmpty()) {
+                        session.rollback();
+
+                        return new SeatChangeResult(
+                                SeatChangeStatus.HAS_BOOKINGS,
+                                bookings);
+                    }
+                }
+
+                if (mapper.updateActive(seatId, active) != 1) {
+                    throw new IllegalStateException(
+                            "좌석 상태 변경에 실패했습니다.");
+                }
+
+                session.commit();
+
+                return new SeatChangeResult(
+                        SeatChangeStatus.SUCCESS);
+
+            } catch (RuntimeException e) {
+                session.rollback();
+                throw e;
             }
-            if (mapper.updateActive(seatId, active) != 1) {
-                throw new IllegalStateException("좌석 상태 변경에 실패했습니다.");
-            }
-            session.commit();
-            return new RoomResult("좌석 상태를 변경했습니다.", List.of());
         }
     }
 }
