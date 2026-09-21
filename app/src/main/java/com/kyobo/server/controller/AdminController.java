@@ -114,24 +114,11 @@ public class AdminController {
                 }
 
                 String menu = readLine(
-                        "[1. 상태 수정] [2. 뒤로가기] [0. 종료하기]: ").trim();
+                        "[1. 상태 수정] [0. 뒤로가기] : ").trim();
 
                 // 관리자 메뉴로 돌아가기
-                if ("2".equals(menu)) {
-                    return;
-                }
-
-                // 프로그램 전체 종료
                 if ("0".equals(menu)) {
-                    String confirm = readLine(
-                            "프로그램을 종료하시겠습니까? (Y/N): ").trim();
-
-                    if ("Y".equalsIgnoreCase(confirm)) {
-                        System.out.println("프로그램을 종료합니다.");
-                        System.exit(0);
-                    }
-
-                    continue;
+                    return;
                 }
 
                 if (!"1".equals(menu)) {
@@ -194,18 +181,30 @@ public class AdminController {
                         continue;
                     }
 
-                    System.out.println("좌석:");
-                    String[] seats = locations.split(",\\s*");
 
-                    for (int i = 0; i < seats.length; i++) {
-                        System.out.print(seats[i]);
+                    Map<String, List<String>> seatsByScreening = new LinkedHashMap<>();
 
-                        if ((i + 1) % 3 == 0 || i == seats.length - 1) {
-                            System.out.println();
-                        } else {
-                            System.out.print(" | ");
+                    for (String item : locations.split(",\\s*")) {
+                        String[] parts = item.split(":", 2);
+
+                        if (parts.length != 2) {
+                            continue;
                         }
+
+                        String screening = parts[0].trim();
+                        String seat = parts[1].trim()
+                                .replace("열 ", "")
+                                .replace("번", "");
+
+                        seatsByScreening
+                                .computeIfAbsent(screening, key -> new ArrayList<>())
+                                .add(seat);
                     }
+
+                    System.out.println("좌석:");
+
+                    seatsByScreening.forEach((screening, seats) ->
+                            System.out.println(screening + ": " + String.join(", ", seats)));
 
                     System.out.println();
                 }
