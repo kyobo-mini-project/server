@@ -7,7 +7,7 @@
     INSERT INTO bookings (user_id, movie_id, screening_id)
     VALUES (#{userId}, #{movieId}, #{screeningId})
   </insert>
-  
+
   <select id="findActiveBookingsByUserId" resultType="int">
     SELECT COUNT(*)
     FROM bookings b
