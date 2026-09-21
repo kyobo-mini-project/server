@@ -169,12 +169,14 @@ public class BookingController {
         System.out.println("예매 상태: 예매완료");
         System.out.println(DIVIDER);
 
-        String input = readLine("1: 예매 취소, 0: 목록으로 돌아가기: ");
+        System.out.println("[1: 예매 취소] [0: 목록으로 돌아가기]");
+        String input = readLine("기능 선택: ");
         if (!input.equals("1")) {
             return false;
         }
 
-        String confirm = readLine("정말 취소하시겠습니까? (취소 확정: 1, 돌아가기: 0): ");
+        System.out.println("[1: 취소 확정] [0: 돌아가기]");
+        String confirm = readLine("정말 취소하시겠습니까? ");
         if (!confirm.equals("1")) {
             return false;
         }
@@ -371,7 +373,8 @@ public class BookingController {
         System.out.println(screening.getScreeningDate() + " " + screening.getStartTime());
         System.out.println(DIVIDER);
 
-        String input = readLine("0을 입력하면 홈으로 돌아갑니다: ");
+        System.out.println("[0: 홈으로 돌아가기]");
+        String input = readLine("기능 선택: ");
         if (input.equals("0")) {
             throw new GoHomeSignal();
         }

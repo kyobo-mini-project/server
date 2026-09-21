@@ -45,7 +45,8 @@ public class AdminController {
         }
         Admin admin = findResponse.getData();
 
-        String password = readLine("관리자 비밀번호 입력 (0: 취소): ");
+        System.out.println("[0: 취소]");
+        String password = readLine("관리자 비밀번호 입력: ");
         if (password.equals("0")) {
             System.out.println("관리자 인증을 취소합니다.");
             return true;
