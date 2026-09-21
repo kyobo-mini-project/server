@@ -1,6 +1,6 @@
 package com.kyobo.server.entity;
 
-public class Room {
+public class RoomAdmin {
     private Integer roomId;
     private String roomName;
     private Integer floor;

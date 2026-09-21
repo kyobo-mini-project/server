@@ -14,7 +14,7 @@
   </select>
 
     <select id="findRoomsByCinemaId"
-             resultType="com.kyobo.server.entity.Room">
+             resultType="com.kyobo.server.entity.RoomAdmin">
     SELECT room_id, room_name, floor, is_active AS active
     FROM rooms
     WHERE cinema_id = #{cinemaId}
@@ -26,7 +26,7 @@
     </update>
 
     <select id="findRoomForUpdate"
-            resultType="com.kyobo.server.entity.Room">
+            resultType="com.kyobo.server.entity.RoomAdmin">
         SELECT room_id, room_name, floor, is_active AS active
         FROM rooms
         WHERE cinema_id = #{cinemaId}
@@ -35,7 +35,7 @@
     </select>
 
     <select id="findBookedBuyers"
-            resultType="com.kyobo.server.entity.Room">
+            resultType="com.kyobo.server.entity.RoomAdmin">
         SELECT u.login_id,
         u.phone_number,
         COUNT(bs.booked_seat_id) AS seat_count,

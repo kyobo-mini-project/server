@@ -1,19 +1,20 @@
 package com.kyobo.server.mapper;
 
 import com.kyobo.server.entity.Admin;
+import com.kyobo.server.entity.RoomAdmin;
 
 public interface AdminMapper {
     Admin findByCode(String code);
 
-    List<Room> findRoomsByCinemaId(@Param("cinemaId") int cinemaId);
+    List<RoomAdmin> findRoomsByCinemaId(@Param("cinemaId") int cinemaId);
 
     void lockBookings();
 
-    Room findRoomForUpdate(
+    RoomAdmin findRoomForUpdate(
             @Param("cinemaId") int cinemaId,
             @Param("roomId") int roomId);
 
-    List<Room> findBookedBuyers(
+    List<RoomAdmin> findBookedBuyers(
             @Param("cinemaId") int cinemaId,
             @Param("roomId") int roomId);
 

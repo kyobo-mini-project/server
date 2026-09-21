@@ -6,7 +6,7 @@ import com.kyobo.server.common.ApiResponse;
 import com.kyobo.server.entity.Admin;
 import com.kyobo.server.service.AdminService;
 import java.util.List;
-import com.kyobo.server.entity.Room;
+import com.kyobo.server.entity.RoomAdmin;
 
 public class AdminController {
     private final Scanner scanner;
@@ -81,7 +81,7 @@ public class AdminController {
     private void manageScreens(Admin admin) {
         while (true) {
             try {
-                List<Room> rooms = adminService.getRooms(admin.getCinemaId());
+                List<RoomAdmin> rooms = adminService.getRooms(admin.getCinemaId());
 
                 System.out.println(
                         "\n[" + admin.getCinemaName() + "] 상영관 목록");
@@ -90,7 +90,7 @@ public class AdminController {
                     System.out.println("등록된 상영관이 없습니다.");
                 }
 
-                for (Room room : rooms) {
+                for (RoomAdmin room : rooms) {
                     System.out.printf("%d | %s | %d층 | %s%n",
                             room.getRoomId(),
                             room.getRoomName(),
@@ -167,7 +167,7 @@ public class AdminController {
 
                 System.out.println(result.message());
 
-                for (Room buyer : result.buyers()) {
+                for (RoomAdmin buyer : result.buyers()) {
                     System.out.printf(
                             "아이디: %s | 전화번호: %s | 예매 좌석: %d개%n좌석: %s%n",
                             buyer.getLoginId(),

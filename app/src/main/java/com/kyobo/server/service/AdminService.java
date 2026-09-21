@@ -36,9 +36,9 @@ public class AdminService {
         }
     }
 
-    public record RoomResult(String message, List<Room> buyers) {}
+    public record RoomResult(String message, List<RoomAdmin> buyers) {}
 
-    public List<Room> getRooms(int cinemaId) {
+    public List<RoomAdmin> getRooms(int cinemaId) {
         try (SqlSession session =
                      MyBatisConfig.sqlSessionFactory().openSession()) {
             return session.getMapper(AdminMapper.class)
@@ -56,7 +56,7 @@ public class AdminService {
                     mapper.lockBookings();
                 }
 
-                Room room = mapper.findRoomForUpdate(cinemaId, roomId);
+                RoomAdmin room = mapper.findRoomForUpdate(cinemaId, roomId);
 
                 if (room == null) {
                     session.rollback();
@@ -69,12 +69,12 @@ public class AdminService {
                 }
 
                 if (!active) {
-                    List<Room> buyers = mapper.findBookedBuyers(cinemaId, roomId);
+                    List<RoomAdmin> buyers = mapper.findBookedBuyers(cinemaId, roomId);
 
                     if (!buyers.isEmpty()) {
                         session.rollback();
 
-                        for (Room buyer : buyers) {
+                        for (RoomAdmin buyer : buyers) {
                             try {
                                 buyer.setPhoneNumber(
                                         FieldEncryptor.decrypt(buyer.getPhoneNumber()));
