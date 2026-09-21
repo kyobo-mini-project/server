@@ -2,6 +2,7 @@ package com.kyobo.server.controller;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -134,7 +135,7 @@ public class AdminController {
     }
 
     private void createScreening(Admin admin) {
-        LocalDate date = readDate("등록할 날짜를 입력하세요. (예: 2026-09-22, 0: 취소): ");
+        LocalDate date = readRegistrationDate();
         if (date == null) {
             return;
         }
@@ -161,7 +162,7 @@ public class AdminController {
         }
 
         while (true) {
-            LocalTime startTime = readTime("시작 시간 (조조 06:00~, 예: 06:30, 0: 취소): ");
+            LocalTime startTime = readTime("시작 시간 (예: 06:30, 0: 취소): ");
             if (startTime == null) {
                 return;
             }
@@ -206,9 +207,21 @@ public class AdminController {
 
         System.out.println();
         System.out.println("===== 영화 목록 =====");
+        int idWidth = 1;
+        int titleWidth = 0;
+        for (Movie movie : movies) {
+            idWidth = Math.max(idWidth, displayWidth(String.valueOf(movie.getMovieId())));
+            titleWidth = Math.max(titleWidth, displayWidth(displayText(movie.getTitle())));
+        }
         for (Movie movie : movies) {
             String running = movie.getRunningTime() == null ? "미등록" : movie.getRunningTime() + "분";
-            System.out.println(movie.getMovieId() + " | " + displayText(movie.getTitle()) + " | " + running);
+            System.out.println(
+                    padDisplay(String.valueOf(movie.getMovieId()), idWidth)
+                            + " | "
+                            + padDisplay(displayText(movie.getTitle()), titleWidth)
+                            + " | "
+                            + running
+            );
         }
 
         while (true) {
@@ -329,6 +342,20 @@ public class AdminController {
         return byRoom;
     }
 
+    private LocalDate readRegistrationDate() {
+        while (true) {
+            LocalDate date = readDate("등록할 날짜를 입력하세요. (예: 2026-09-22, 0: 취소): ");
+            if (date == null) {
+                return null;
+            }
+            if (date.isBefore(LocalDate.now(ZoneId.of("Asia/Seoul")))) {
+                System.out.println("이미 지난 날짜에는 상영회차를 등록할 수 없습니다.");
+                continue;
+            }
+            return date;
+        }
+    }
+
     private LocalDate readDate(String prompt) {
         while (true) {
             String input = readLine(prompt);
@@ -355,6 +382,36 @@ public class AdminController {
             return "미등록";
         }
         return value;
+    }
+
+    private String padDisplay(String text, int width) {
+        int padding = width - displayWidth(text);
+        if (padding <= 0) {
+            return text;
+        }
+        return text + " ".repeat(padding);
+    }
+
+    /** 터미널 기준 표시 폭. 한글 등 전각은 2칸으로 계산한다. */
+    private int displayWidth(String text) {
+        int width = 0;
+        for (int i = 0; i < text.length(); ) {
+            int codePoint = text.codePointAt(i);
+            i += Character.charCount(codePoint);
+            width += isWideChar(codePoint) ? 2 : 1;
+        }
+        return width;
+    }
+
+    private boolean isWideChar(int codePoint) {
+        Character.UnicodeBlock block = Character.UnicodeBlock.of(codePoint);
+        return block == Character.UnicodeBlock.HANGUL_SYLLABLES
+                || block == Character.UnicodeBlock.HANGUL_JAMO
+                || block == Character.UnicodeBlock.HANGUL_COMPATIBILITY_JAMO
+                || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+                || block == Character.UnicodeBlock.CJK_SYMBOLS_AND_PUNCTUATION
+                || block == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS
+                || (codePoint >= 0xFF01 && codePoint <= 0xFF60);
     }
 
     private String readLine(String prompt) {

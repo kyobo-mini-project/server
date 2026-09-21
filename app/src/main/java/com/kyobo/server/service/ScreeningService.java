@@ -1,7 +1,9 @@
 package com.kyobo.server.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 
 import org.apache.ibatis.session.SqlSession;
@@ -15,6 +17,7 @@ import com.kyobo.server.mapper.RoomMapper;
 import com.kyobo.server.mapper.ScreeningMapper;
 
 public class ScreeningService {
+    private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
     public List<Room> findActiveRooms(int cinemaId) {
         try (SqlSession session = MyBatisConfig.sqlSessionFactory().openSession()) {
@@ -63,6 +66,9 @@ public class ScreeningService {
         }
         if (startTime.isBefore(LocalTime.of(6, 0))) {
             throw new IllegalArgumentException("상영 시작 시간은 조조 기준 06:00부터 입력할 수 있습니다.");
+        }
+        if (!LocalDateTime.of(date, startTime).isAfter(LocalDateTime.now(SEOUL))) {
+            throw new IllegalArgumentException("이미 지난 날짜와 시간에는 상영회차를 등록할 수 없습니다.");
         }
 
         try (SqlSession session = MyBatisConfig.sqlSessionFactory().openSession()) {
