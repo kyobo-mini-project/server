@@ -99,26 +99,38 @@ public class UserController {
     }
 
     /**
-     * @return 로그인 성공한 사용자 (이름은 복호화된 평문)
+     * @return 로그인 성공한 사용자 (이름은 복호화된 평문), 취소 시 null
      */
     public User runSignIn() {
         System.out.println("===========================================================");
-        System.out.println("로그인");
+        System.out.println("로그인 (이전 화면: 0)");
         System.out.println("-----------------------------------------------------------");
 
         String loginId = readLine("[ID] : ");
+        if (isCancel(loginId)) {
+            return null;
+        }
         String password = readLine("[PASSWORD] : ");
+        if (isCancel(password)) {
+            return null;
+        }
         System.out.println("===========================================================");
 
         while (true) {
             if (isBlank(loginId)) {
                 System.out.println("아이디를 입력해 주세요.");
                 loginId = readLine("[ID] : ");
+                if (isCancel(loginId)) {
+                    return null;
+                }
                 continue;
             }
             if (isBlank(password)) {
                 System.out.println("비밀번호를 입력해 주세요.");
                 password = readLine("[PASSWORD] : ");
+                if (isCancel(password)) {
+                    return null;
+                }
                 continue;
             }
 
@@ -129,7 +141,13 @@ public class UserController {
             } catch (IllegalStateException e) {
                 System.out.println(e.getMessage() + " 다시 입력해 주세요.");
                 loginId = readLine("[ID] : ");
+                if (isCancel(loginId)) {
+                    return null;
+                }
                 password = readLine("[PASSWORD] : ");
+                if (isCancel(password)) {
+                    return null;
+                }
             }
         }
     }
@@ -200,6 +218,10 @@ public class UserController {
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private boolean isCancel(String value) {
+        return value != null && "0".equals(value.trim());
     }
 
     /** 영문·숫자 각각 1자 이상, 총 8자 이상 */
