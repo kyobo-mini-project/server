@@ -4,6 +4,7 @@ import java.util.InputMismatchException;
 import java.util.Scanner;
 
 import com.kyobo.server.common.GoHomeSignal;
+import com.kyobo.server.common.IntroAnimation;
 import com.kyobo.server.common.RequireLoginSignal;
 import com.kyobo.server.entity.User;
 
@@ -31,6 +32,7 @@ public class ConsoleController {
     }
 
     public void run() {
+        IntroAnimation.play();
         welcome();
         runGuestHome();
     }
