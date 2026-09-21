@@ -49,7 +49,7 @@ public class ScreeningService {
     /**
      * 상영회차를 등록한다.
      * endTime = startTime + runningTime(분)
-     * 같은 관의 시간 겹침이 있으면 실패한다.
+     * 같은 관에서 시간 겹침 또는 정비시간(종료 후 30분) 미확보 시 실패한다.
      */
     public Screening createScreening(
             int cinemaId,
@@ -99,7 +99,7 @@ public class ScreeningService {
 
             int overlaps = screeningMapper.countOverlaps(roomId, date, startTime, endTime);
             if (overlaps > 0) {
-                throw new IllegalStateException("선택한 상영관에 이미 겹치는 상영회차가 있습니다.");
+                throw new IllegalStateException("선택한 상영관에 이미 겹치는 상영회차(정비시간)가 있습니다.");
             }
 
             Screening screening = new Screening();

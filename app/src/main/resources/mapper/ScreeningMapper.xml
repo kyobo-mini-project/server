@@ -57,24 +57,25 @@
   </select>
 
   <!--
-    심야(자정 넘김) 포함 겹침 검사.
+    심야(자정 넘김) 포함 겹침 검사 + 정비시간 30분.
     end_time <= start_time 이면 종료는 다음날로 본다.
+    이전 회차 종료 후 30분이 지나야 다음 회차 시작 가능.
   -->
   <select id="countOverlaps" resultType="int">
     SELECT COUNT(*)
     FROM screenings s
     WHERE s.room_id = #{roomId}
       AND (s.screening_date + s.start_time)
-          &lt; (CASE
+          &lt; ((CASE
                WHEN #{endTime} &gt; #{startTime}
                  THEN (CAST(#{date} AS date) + #{endTime})
                ELSE ((CAST(#{date} AS date) + 1) + #{endTime})
-             END)
-      AND (CASE
+             END) + INTERVAL '30 minutes')
+      AND ((CASE
              WHEN s.end_time &gt; s.start_time
                THEN (s.screening_date + s.end_time)
              ELSE ((s.screening_date + 1) + s.end_time)
-           END)
+           END) + INTERVAL '30 minutes')
           &gt; (CAST(#{date} AS date) + #{startTime})
   </select>
 
