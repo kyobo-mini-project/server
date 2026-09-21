@@ -4,12 +4,17 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Param;
 
+import com.kyobo.server.entity.Movie;
 import com.kyobo.server.entity.MovieDetail;
 import com.kyobo.server.entity.MovieListItem;
 import com.kyobo.server.entity.MovieSeatCount;
 
 public interface MovieMapper {
     List<MovieListItem> findAllWithGenres();
+
+    List<Movie> findAll();
+
+    Movie findById(@Param("movieId") Integer movieId);
 
     MovieDetail findMovieDetail(@Param("movieId") Integer movieId);
 

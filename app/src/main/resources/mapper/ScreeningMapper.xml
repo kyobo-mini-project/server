@@ -56,4 +56,18 @@
     ORDER BY s.screening_id ASC
   </select>
 
+  <select id="countOverlaps" resultType="int">
+    SELECT COUNT(*)
+    FROM screenings
+    WHERE room_id = #{roomId}
+      AND screening_date = #{date}
+      AND start_time &lt; #{endTime}
+      AND end_time &gt; #{startTime}
+  </select>
+
+  <insert id="insert" useGeneratedKeys="true" keyProperty="screeningId" keyColumn="screening_id">
+    INSERT INTO screenings (cinema_id, room_id, movie_id, screening_date, start_time, end_time)
+    VALUES (#{cinemaId}, #{roomId}, #{movieId}, #{screeningDate}, #{startTime}, #{endTime})
+  </insert>
+
 </mapper>
