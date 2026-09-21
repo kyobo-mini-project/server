@@ -145,7 +145,7 @@ public class BookingController {
                 System.out.println("예매 내역이 없습니다.");
                 return;
             }
-            Booking selected = chooseFromList(bookings, "예매 내역을 선택하세요. (0: 이전 화면으로)",
+            Booking selected = chooseFromList(bookings, "예매 내역을 선택하세요. [0: 이전 화면으로]",
                     b -> b.getMovieTitle() + " / " + b.getCinemaName() + " / " + b.getScreeningDate() + " "
                             + b.getStartTime() + " / 좌석: " + b.getSeatCodes());
             if (selected == null) {
@@ -197,7 +197,7 @@ public class BookingController {
 
         while (true) {
             System.out.println();
-            System.out.println("관람 날짜를 입력하세요. (관람 가능 기간: " + minDate + " ~ " + maxDate + ") (0: 이전 단계로)");
+            System.out.println("관람 날짜를 입력하세요. (관람 가능 기간: " + minDate + " ~ " + maxDate + ") [0: 이전 단계로]");
             String input = readLine("날짜 (예: 2026-09-15): ");
             if (input.equals("0")) {
                 return null;
@@ -212,12 +212,12 @@ public class BookingController {
 
     /** @return 선택한 영화관, 0 입력 시 null (예매 취소) */
     private Cinema chooseCinema(List<Cinema> cinemas) {
-        return chooseFromList(cinemas, "영화관을 선택하세요. (0: 취소)", Cinema::getCinemaName);
+        return chooseFromList(cinemas, "영화관을 선택하세요. [0: 취소]", Cinema::getCinemaName);
     }
 
     /** @return 선택한 상영회차, 0 입력 시 null (이전 단계로) */
     private Screening chooseScreening(List<Screening> screenings) {
-        String header = screenings.get(0).getScreeningDate() + " 상영회차를 선택하세요. (0: 이전 단계로)";
+        String header = screenings.get(0).getScreeningDate() + " 상영회차를 선택하세요. [0: 이전 단계로]";
         return chooseFromList(screenings, header,
                 s -> s.getStartTime() + "~" + s.getEndTime() + " (" + s.getRoomName() + ")");
     }
@@ -245,7 +245,7 @@ public class BookingController {
     /** @return 예매할 좌석 수, 0 입력 시 -1 (이전 단계로) */
     private int readSeatCount() {
         while (true) {
-            String input = readLine("예매할 좌석 수를 입력하세요. (0: 이전 단계로): ");
+            String input = readLine("예매할 좌석 수를 입력하세요. [0: 이전 단계로]: ");
             if (input.equals("0")) {
                 return -1;
             }
@@ -273,7 +273,7 @@ public class BookingController {
         while (true) {
             printSeatMap(seatMap);
 
-            String input = readLine("예매할 좌석 코드를 콤마로 구분해 입력하세요. (예: C3,C4,C5) (0: 이전 단계로): ");
+            String input = readLine("예매할 좌석 코드를 콤마로 구분해 입력하세요. (예: C3,C4,C5) [0: 이전 단계로]: ");
             if (input.equals("0")) {
                 return null;
             }
