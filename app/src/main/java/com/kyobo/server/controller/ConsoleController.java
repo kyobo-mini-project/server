@@ -3,6 +3,8 @@ package com.kyobo.server.controller;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
+import com.kyobo.server.common.GoHomeSignal;
+import com.kyobo.server.common.RequireLoginSignal;
 import com.kyobo.server.entity.User;
 
 public class ConsoleController {
@@ -17,10 +19,15 @@ public class ConsoleController {
     private User currentUser;
 
     public ConsoleController(Scanner scanner) {
+        this(scanner, new UserController(scanner), new MovieController(scanner), new AdminController(scanner));
+    }
+
+    public ConsoleController(Scanner scanner, UserController userController,
+                             MovieController movieController, AdminController adminController) {
         this.scanner = scanner;
-        this.userController = new UserController(scanner);
-        this.movieController = new MovieController(scanner);
-        this.adminController = new AdminController(scanner);
+        this.userController = userController;
+        this.movieController = movieController;
+        this.adminController = adminController;
     }
 
     public void run() {
@@ -46,11 +53,10 @@ public class ConsoleController {
                 }
                 switch (selected) {
                     case 1:
-                        programRunning = movieController.runMovieList();
+                        programRunning = movieController.runMovieList(currentUser);
                         break;
                     case 2:
-                        currentUser = userController.runSignIn();
-                        runUserHome();
+                        loginAndEnterUserHome();
                         break;
                     case 3:
                         if (!userController.runSignUp()) {
@@ -68,8 +74,17 @@ public class ConsoleController {
                 System.out.println("숫자만 입력해 주세요.");
             } catch (IllegalArgumentException e) {
                 System.out.println(e.getMessage());
+            } catch (RequireLoginSignal e) {
+                loginAndEnterUserHome();
             }
             System.out.println();
+        }
+    }
+
+    private void loginAndEnterUserHome() {
+        currentUser = userController.runSignIn();
+        if (currentUser != null) {
+            runUserHome();
         }
     }
 
@@ -77,7 +92,7 @@ public class ConsoleController {
         while (programRunning && currentUser != null) {
             try {
                 System.out.println("원하시는 기능을 선택해주세요. (" + currentUser.getName() + "님)");
-                System.out.println("[1. 영화 목록 조회] [2. 예매 내역] [3. 로그아웃] [0. 종료]");
+                System.out.println("[1. 영화 목록 조회] [2. 예매 내역] [3. 로그아웃] [4. 회원 탈퇴] [0. 종료]");
                 int selected = readMenuChoice("기능 선택: ");
                 if (selected == ADMIN_MODE_HANDLED) {
                     System.out.println();
@@ -85,14 +100,19 @@ public class ConsoleController {
                 }
                 switch (selected) {
                     case 1:
-                        programRunning = movieController.runMovieList();
+                        programRunning = movieController.runMovieList(currentUser);
                         break;
                     case 2:
-                        // TODO: 예매 내역 조회 구현 후 수정
-                        System.out.println("예매 내역 조회 구현 필요");
+                        
+                        new BookingController(scanner).runHistory(currentUser);
                         break;
                     case 3:
                         requestLogout();
+                        break;
+                    case 4:
+                        if (userController.runWithdraw(currentUser)) {
+                            currentUser = null;
+                        }
                         break;
                     case 0:
                         requestExit();
@@ -105,6 +125,8 @@ public class ConsoleController {
                 System.out.println("숫자만 입력해 주세요.");
             } catch (IllegalArgumentException e) {
                 System.out.println(e.getMessage());
+            } catch (GoHomeSignal e) {
+                // 예매 등 중첩 화면에서 홈으로 복귀 확정 - 별도 처리 없이 메인 메뉴 루프 계속
             }
             System.out.println();
         }

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kyobo.server.mapper.ScreeningMapper">
+
+  <select id="findCinemasByMovie" resultType="com.kyobo.server.entity.Cinema">
+    SELECT DISTINCT c.cinema_id, c.cinema_name
+    FROM screenings s
+    JOIN cinemas c ON c.cinema_id = s.cinema_id
+    WHERE s.movie_id = #{movieId}
+      AND (s.screening_date, s.start_time)
+          >= ((now() AT TIME ZONE 'Asia/Seoul')::date, (now() AT TIME ZONE 'Asia/Seoul')::time)
+    ORDER BY c.cinema_id
+  </select>
+
+  <select id="findByMovieAndCinema" resultType="com.kyobo.server.entity.Screening">
+    SELECT s.screening_id,
+           s.movie_id,
+           s.cinema_id,
+           c.cinema_name,
+           s.room_id,
+           r.room_name,
+           r.floor,
+           s.screening_date,
+           s.start_time,
+           s.end_time
+    FROM screenings s
+    JOIN rooms r ON r.room_id = s.room_id
+    JOIN cinemas c ON c.cinema_id = s.cinema_id
+    WHERE s.movie_id = #{movieId}
+      AND s.cinema_id = #{cinemaId}
+      AND (s.screening_date, s.start_time)
+          >= ((now() AT TIME ZONE 'Asia/Seoul')::date, (now() AT TIME ZONE 'Asia/Seoul')::time)
+    ORDER BY s.screening_date, s.start_time
+  </select>
+
+  <select id="findByCinemaAndDate" resultType="com.kyobo.server.entity.Screening">
+    SELECT s.screening_id,
+           s.movie_id,
+           s.cinema_id,
+           c.cinema_name,
+           s.room_id,
+           r.room_name,
+           r.floor,
+           s.screening_date,
+           s.start_time,
+           s.end_time,
+           m.title AS movie_title
+    FROM screenings s
+    JOIN rooms r ON r.room_id = s.room_id
+    JOIN cinemas c ON c.cinema_id = s.cinema_id
+    JOIN movies m ON m.movie_id = s.movie_id
+    WHERE s.cinema_id = #{cinemaId}
+      AND s.screening_date = #{date}
+    ORDER BY s.start_time ASC, s.screening_id ASC
+  </select>
+
+  <!--
+    심야(자정 넘김) 포함 겹침 검사 + 정비시간 60분.
+    end_time <= start_time 이면 종료는 다음날로 본다.
+    이전 회차 종료 후 60분이 지나야 다음 회차 시작 가능.
+  -->
+  <select id="countOverlaps" resultType="int">
+    SELECT COUNT(*)
+    FROM screenings s
+    WHERE s.room_id = #{roomId}
+      AND (s.screening_date + s.start_time)
+          &lt; ((CASE
+               WHEN #{endTime} &gt; #{startTime}
+                 THEN (CAST(#{date} AS date) + #{endTime})
+               ELSE ((CAST(#{date} AS date) + 1) + #{endTime})
+             END) + INTERVAL '60 minutes')
+      AND ((CASE
+             WHEN s.end_time &gt; s.start_time
+               THEN (s.screening_date + s.end_time)
+             ELSE ((s.screening_date + 1) + s.end_time)
+           END) + INTERVAL '60 minutes')
+          &gt; (CAST(#{date} AS date) + #{startTime})
+  </select>
+
+  <insert id="insert" useGeneratedKeys="true" keyProperty="screeningId" keyColumn="screening_id">
+    INSERT INTO screenings (cinema_id, room_id, movie_id, screening_date, start_time, end_time)
+    VALUES (#{cinemaId}, #{roomId}, #{movieId}, #{screeningDate}, #{startTime}, #{endTime})
+  </insert>
+
+</mapper>

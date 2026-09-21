@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import com.kyobo.server.entity.MovieListItem;
+import com.kyobo.server.entity.User;
 import com.kyobo.server.service.MovieService;
 
 import java.time.LocalDate;
@@ -18,14 +19,16 @@ import com.kyobo.server.entity.Genre;
 public class MovieController {
     private final Scanner scanner;
     private final MovieService movieService;
+    private final MovieDetailController movieDetailController;
 
     public MovieController(Scanner scanner) {
         this.scanner = scanner;
         this.movieService = new MovieService();
+        this.movieDetailController = new MovieDetailController(scanner, this::requestExit); //moviedetail추가
     }
 
     /** @return false면 프로그램을 종료하고, true면 홈 메뉴로 돌아간다. */
-    public boolean runMovieList() {
+    public boolean runMovieList(User currentUser) {
         List<MovieListItem> movies = movieService.getMovieList();
         printMovieList(movies);
 
@@ -37,7 +40,13 @@ public class MovieController {
                         if (movies.isEmpty()) {
                             printInvalidMenu();
                         } else {
-                            runMovieDetail();
+                            boolean continueProgram =
+                            runMovieDetail(currentUser);
+
+                            if (continueProgram == false){
+                                return false;
+                            }
+                            printMovieList(movies);
                         }
                     }
                     case 2 -> {
@@ -58,16 +67,63 @@ public class MovieController {
         System.out.println("================================================");
         System.out.println("상영 영화 목록");
         System.out.println("------------------------------------------------");
-        int count = 0;
         if (movies.isEmpty()) {
             System.out.println("현재 상영 중인 영화가 없습니다.");
         } else {
+            int titleWidth = Math.max(8, maxDisplayWidth(movies.stream().map(MovieListItem::getTitle).toList()));
+            int genreWidth = Math.max(8, maxDisplayWidth(movies.stream().map(MovieListItem::getGenres).toList()));
+
             for (MovieListItem movie : movies) {
-                count++;
-                System.out.printf("%d. 제목: %s | 장르: %s%n", movie.getMovieId(), movie.getTitle(), movie.getGenres());
+                System.out.printf("%s  제목: %s  장르: %s  (점유율: %5.1f%%)%n",
+                        padDisplay(movie.getMovieId() + ".", 4),
+                        padDisplay(nullToEmpty(movie.getTitle()), titleWidth),
+                        padDisplay(nullToEmpty(movie.getGenres()), genreWidth),
+                        movie.getOccupancyRate());
             }
         }
         System.out.println("================================================");
+    }
+
+    private int maxDisplayWidth(List<String> values) {
+        int max = 0;
+        for (String value : values) {
+            max = Math.max(max, displayWidth(nullToEmpty(value)));
+        }
+        return max;
+    }
+
+    private String padDisplay(String text, int width) {
+        int padding = width - displayWidth(text);
+        if (padding <= 0) {
+            return text;
+        }
+        return text + " ".repeat(padding);
+    }
+
+    /** 터미널 기준 표시 폭. 한글 등 전각은 2칸으로 계산한다. */
+    private int displayWidth(String text) {
+        int width = 0;
+        for (int i = 0; i < text.length(); ) {
+            int codePoint = text.codePointAt(i);
+            i += Character.charCount(codePoint);
+            width += isWideChar(codePoint) ? 2 : 1;
+        }
+        return width;
+    }
+
+    private boolean isWideChar(int codePoint) {
+        Character.UnicodeBlock block = Character.UnicodeBlock.of(codePoint);
+        return block == Character.UnicodeBlock.HANGUL_SYLLABLES
+                || block == Character.UnicodeBlock.HANGUL_JAMO
+                || block == Character.UnicodeBlock.HANGUL_COMPATIBILITY_JAMO
+                || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+                || block == Character.UnicodeBlock.CJK_SYMBOLS_AND_PUNCTUATION
+                || block == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS
+                || (codePoint >= 0xFF01 && codePoint <= 0xFF60);
+    }
+
+    private String nullToEmpty(String value) {
+        return value == null ? "" : value;
     }
 
     private void printSubMenu(boolean isEmpty) {
@@ -76,9 +132,8 @@ public class MovieController {
                 : "[1. 영화 상세 조회] [2. 뒤로가기] [0. 종료]");
     }
 
-    private void runMovieDetail() {
-        // 영화 상세 조회(F-05)가 구현되면 해당 컨트롤러로 위임한다.
-        System.out.println("영화 상세 조회 기능은 아직 구현되지 않았습니다.");
+    private boolean runMovieDetail(User currentUser) {
+        return movieDetailController.runMovieDetail(currentUser);
     }
 
     private void printInvalidMenu() {

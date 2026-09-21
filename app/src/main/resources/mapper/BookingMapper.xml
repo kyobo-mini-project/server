@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kyobo.server.mapper.BookingMapper">
+  <insert id="insert" useGeneratedKeys="true" keyProperty="bookingId" keyColumn="booking_id">
+    INSERT INTO bookings (user_id, movie_id, screening_id)
+    VALUES (#{userId}, #{movieId}, #{screeningId})
+  </insert>
+
+  <select id="findActiveBookingsByUserId" resultType="int">
+    SELECT COUNT(*)
+    FROM bookings b
+    JOIN screenings s ON b.screening_id = s.screening_id
+    WHERE b.user_id = #{userId}
+      AND b.booking_status = 'DONE'
+      AND (s.screening_date + s.start_time) > CURRENT_TIMESTAMP
+  </select>
+
+  <select id="findByUser" resultType="com.kyobo.server.entity.Booking">
+    SELECT b.booking_id,
+           b.user_id,
+           b.movie_id,
+           b.screening_id,
+           b.booking_status,
+           b.booking_date,
+           m.title AS movie_title,
+           s.screening_date,
+           s.start_time,
+           c.cinema_name,
+           r.room_name,
+           r.floor,
+           (SELECT string_agg(st.row_name || st.col_num, ', ' ORDER BY st.row_name, st.col_num)
+            FROM booked_seats bs
+            JOIN seats st ON st.seat_id = bs.seat_id
+            WHERE bs.booking_id = b.booking_id) AS seat_codes
+    FROM bookings b
+    JOIN screenings s ON s.screening_id = b.screening_id
+    JOIN cinemas c ON c.cinema_id = s.cinema_id
+    JOIN rooms r ON r.room_id = s.room_id
+    JOIN movies m ON m.movie_id = b.movie_id
+    WHERE b.user_id = #{userId}
+      AND (s.screening_date, s.start_time)
+          >= ((now() AT TIME ZONE 'Asia/Seoul')::date, (now() AT TIME ZONE 'Asia/Seoul')::time)
+    ORDER BY s.screening_date, s.start_time
+  </select>
+
+</mapper>

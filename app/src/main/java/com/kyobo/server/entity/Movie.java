@@ -3,8 +3,8 @@ package com.kyobo.server.entity;
 // 날짜만 표현하는 타입
 import java.time.LocalDate;
 
+/** 상영회차 등록 등에 쓰는 영화 기본 정보. */
 public class Movie {
-
     private Integer movieId;
     private String title;
     private Integer ageLimit;

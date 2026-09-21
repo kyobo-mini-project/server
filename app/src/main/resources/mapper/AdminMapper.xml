@@ -13,4 +13,74 @@
     WHERE a.admin_code = #{code}
   </select>
 
+    <select id="findRoomsByCinemaId"
+             resultType="com.kyobo.server.entity.RoomAdmin">
+    SELECT room_id, room_name, floor, is_active AS active
+    FROM rooms
+    WHERE cinema_id = #{cinemaId}
+    ORDER BY floor, room_id
+</select>
+
+    <update id="lockBookings">
+        LOCK TABLE bookings IN SHARE ROW EXCLUSIVE MODE
+    </update>
+
+    <select id="findRoomForUpdate"
+            resultType="com.kyobo.server.entity.RoomAdmin">
+        SELECT room_id, room_name, floor, is_active AS active
+        FROM rooms
+        WHERE cinema_id = #{cinemaId}
+        AND room_id = #{roomId}
+        FOR UPDATE
+    </select>
+
+    <select id="findBookedBuyers"
+            resultType="com.kyobo.server.entity.RoomAdmin">
+        SELECT b.booking_id,
+        u.user_id,
+        u.login_id,
+        u.phone_number,
+        s.screening_id
+        FROM bookings b
+        JOIN screenings s ON s.screening_id = b.screening_id
+        JOIN rooms r ON r.room_id = s.room_id
+        JOIN users u ON u.user_id = b.user_id
+        WHERE r.cinema_id = #{cinemaId}
+        AND r.room_id = #{roomId}
+        AND b.booking_status = 'DONE'
+        ORDER BY u.login_id, s.screening_id, b.booking_id
+    </select>
+
+    <select id="findSeatsByBookingIds"
+            resultType="com.kyobo.server.entity.RoomAdmin">
+        SELECT bs.booking_id,
+        bs.booked_seat_id,
+        bs.screening_id,
+        st.row_name,
+        st.col_num
+        FROM booked_seats bs
+        JOIN seats st ON st.seat_id = bs.seat_id
+        WHERE
+        <choose>
+            <when test="bookingIds != null and bookingIds.size() > 0">
+                bs.booking_id IN
+                <foreach collection="bookingIds" item="id"
+                         open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </when>
+            <otherwise>
+                FALSE
+            </otherwise>
+        </choose>
+        ORDER BY bs.booking_id, st.row_name, st.col_num
+    </select>
+
+    <update id="updateRoomActive">
+        UPDATE rooms
+        SET is_active = #{active}
+        WHERE cinema_id = #{cinemaId}
+        AND room_id = #{roomId}
+    </update>
+
 </mapper>
