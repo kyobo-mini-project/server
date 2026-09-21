@@ -1,20 +1,34 @@
 package com.kyobo.server.controller;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 import com.kyobo.server.common.ApiResponse;
 import com.kyobo.server.entity.Admin;
-import com.kyobo.server.service.AdminService;
-import java.util.List;
+import com.kyobo.server.entity.Room;
 import com.kyobo.server.entity.RoomAdmin;
+import com.kyobo.server.entity.Screening;
+import com.kyobo.server.service.AdminService;
+import com.kyobo.server.service.ScreeningService;
 
 public class AdminController {
+    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
+
     private final Scanner scanner;
     private final AdminService adminService;
+    private final ScreeningService screeningService;
 
     public AdminController(Scanner scanner) {
         this.scanner = scanner;
         this.adminService = new AdminService();
+        this.screeningService = new ScreeningService();
     }
 
     /**
@@ -61,7 +75,7 @@ public class AdminController {
                     manageScreens(admin);
                     break;
                 case "3":
-                    manageShowtimes();
+                    manageShowtimes(admin);
                     break;
                 case "0":
                     System.out.println("관리자 모드를 종료합니다.");
@@ -188,9 +202,112 @@ public class AdminController {
         }
     }
 
-    private void manageShowtimes() {
-        // TODO: 담당자 구현 예정
-        System.out.println("[상영회차 관리] 기능은 아직 구현되지 않았습니다.");
+    private void manageShowtimes(Admin admin) {
+        while (true) {
+            System.out.println();
+            System.out.println("===== 상영회차 관리 =====");
+            System.out.println("[1. 상영회차 조회] [0. 뒤로가기]");
+            String choice = readLine("선택: ");
+            switch (choice) {
+                case "1":
+                    listScreenings(admin);
+                    break;
+                case "0":
+                    return;
+                default:
+                    System.out.println("올바른 번호를 입력하세요.");
+            }
+        }
+    }
+
+    private void listScreenings(Admin admin) {
+        LocalDate date = readDate("조회할 날짜를 입력하세요. (예: 2026-09-22, 0: 취소): ");
+        if (date == null) {
+            return;
+        }
+
+        try {
+            List<Room> rooms = screeningService.findActiveRooms(admin.getCinemaId());
+            List<Screening> screenings = screeningService.findByCinemaAndDate(admin.getCinemaId(), date);
+            printScreeningsByRoom(admin.getCinemaName(), date, rooms, screenings);
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private void printScreeningsByRoom(
+            String cinemaName,
+            LocalDate date,
+            List<Room> rooms,
+            List<Screening> screenings
+    ) {
+        System.out.println();
+        System.out.println("===== [" + cinemaName + "] " + date + " 상영회차 =====");
+
+        if (rooms == null || rooms.isEmpty()) {
+            System.out.println("상영 없음");
+            return;
+        }
+
+        Map<Integer, List<Screening>> byRoom = groupByRoom(screenings);
+        for (Room room : rooms) {
+            System.out.println("[" + displayText(room.getRoomName()).trim() + "]");
+            List<Screening> roomScreenings = byRoom.getOrDefault(room.getRoomId(), List.of());
+            if (roomScreenings.isEmpty()) {
+                System.out.println("상영 없음");
+                continue;
+            }
+            for (Screening screening : roomScreenings) {
+                System.out.println(
+                        screening.getScreeningId()
+                                + " | "
+                                + formatTime(screening.getStartTime())
+                                + "-"
+                                + formatTime(screening.getEndTime())
+                                + " | "
+                                + displayText(screening.getMovieTitle())
+                );
+            }
+        }
+    }
+
+    private Map<Integer, List<Screening>> groupByRoom(List<Screening> screenings) {
+        Map<Integer, List<Screening>> byRoom = new LinkedHashMap<>();
+        if (screenings == null) {
+            return byRoom;
+        }
+        for (Screening screening : screenings) {
+            byRoom.computeIfAbsent(screening.getRoomId(), key -> new ArrayList<>()).add(screening);
+        }
+        return byRoom;
+    }
+
+    private LocalDate readDate(String prompt) {
+        while (true) {
+            String input = readLine(prompt);
+            if ("0".equals(input.trim())) {
+                return null;
+            }
+            try {
+                return LocalDate.parse(input.trim());
+            } catch (DateTimeParseException e) {
+                System.out.println("날짜 형식이 올바르지 않습니다. (예: 2026-09-22)");
+            }
+        }
+    }
+
+    private String formatTime(LocalTime time) {
+        if (time == null) {
+            return "--:--";
+        }
+        return time.format(TIME_FORMAT);
+    }
+
+    private String displayText(String value) {
+        if (value == null || value.isBlank()) {
+            return "미등록";
+        }
+        return value;
     }
 
     private String readLine(String prompt) {

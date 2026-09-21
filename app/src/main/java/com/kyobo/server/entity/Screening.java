@@ -14,6 +14,7 @@ public class Screening {
     private LocalDate screeningDate;
     private LocalTime startTime;
     private LocalTime endTime;
+    private String movieTitle;
 
     public Integer getScreeningId() {
         return screeningId;
@@ -93,5 +94,13 @@ public class Screening {
 
     public void setEndTime(LocalTime endTime) {
         this.endTime = endTime;
+    }
+
+    public String getMovieTitle() {
+        return movieTitle;
+    }
+
+    public void setMovieTitle(String movieTitle) {
+        this.movieTitle = movieTitle;
     }
 }
