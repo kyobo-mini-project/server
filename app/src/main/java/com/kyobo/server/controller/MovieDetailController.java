@@ -155,6 +155,8 @@ public class MovieDetailController {
         }
 
         System.out.println("줄거리: " + displayText(movie.getContent()));
+        System.out.printf("영화 순위: %d위 (%.1f%%)%n",
+                movie.getOccupancyRank(), movie.getOccupancyRate());
         System.out.println("================================================");
     }
 

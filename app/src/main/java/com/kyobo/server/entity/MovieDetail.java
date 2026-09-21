@@ -12,6 +12,8 @@ public class MovieDetail {
     private Timestamp releaseDate;
     private Integer ageLimit;
     private String content;
+    private double occupancyRate;
+    private int occupancyRank;
 
     public Integer getMovieId() {
         return movieId;
@@ -75,5 +77,21 @@ public class MovieDetail {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public double getOccupancyRate() {
+        return occupancyRate;
+    }
+
+    public void setOccupancyRate(double occupancyRate) {
+        this.occupancyRate = occupancyRate;
+    }
+
+    public int getOccupancyRank() {
+        return occupancyRank;
+    }
+
+    public void setOccupancyRank(int occupancyRank) {
+        this.occupancyRank = occupancyRank;
     }
 }

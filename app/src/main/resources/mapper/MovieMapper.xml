@@ -46,6 +46,23 @@ resultType="com.kyobo.server.entity.MovieDetail" >
       WHERE m.movie_id = #{movieId}
   </select>
 
+  <select id="findAvailableSeatCounts" resultType="com.kyobo.server.entity.MovieSeatCount">
+    SELECT s.movie_id AS movieId,
+           COUNT(se.seat_id) AS seatCount
+    FROM screenings s
+    JOIN seats se ON se.room_id = s.room_id
+                 AND se.is_active = TRUE
+    GROUP BY s.movie_id
+  </select>
 
+  <select id="findSoldSeatCounts" resultType="com.kyobo.server.entity.MovieSeatCount">
+    SELECT s.movie_id AS movieId,
+           COUNT(bs.booked_seat_id) AS seatCount
+    FROM booked_seats bs
+    JOIN bookings b ON b.booking_id = bs.booking_id
+                   AND b.booking_status = 'DONE'
+    JOIN screenings s ON s.screening_id = bs.screening_id
+    GROUP BY s.movie_id
+  </select>
 
 </mapper>
