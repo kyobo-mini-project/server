@@ -13,10 +13,6 @@ import com.kyobo.server.mapper.UserMapper;
 import com.kyobo.server.mapper.BookingMapper;
 
 public class UserService {
-    public enum WithdrawResult {
-        READY, INVALID_USER, ACTIVE_BOOKINGS, PASSWORD_REQUIRED, PASSWORD_MISMATCH, SUCCESS
-    }
-
     private final SqlSessionFactory sessionFactory;
 
     public UserService() {
@@ -104,6 +100,10 @@ public class UserService {
             user.setUserPw(null);
             return user;
         }
+    }
+
+    public enum WithdrawResult {
+        READY, INVALID_USER, ACTIVE_BOOKINGS, PASSWORD_REQUIRED, PASSWORD_MISMATCH, SUCCESS
     }
 
     /** 비밀번호 입력 전에 회원 상태와 향후 상영 예매를 확인한다. */
