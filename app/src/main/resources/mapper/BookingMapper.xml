@@ -3,10 +3,17 @@
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.kyobo.server.mapper.BookingMapper">
-
   <insert id="insert" useGeneratedKeys="true" keyProperty="bookingId" keyColumn="booking_id">
     INSERT INTO bookings (user_id, movie_id, screening_id)
     VALUES (#{userId}, #{movieId}, #{screeningId})
   </insert>
-
+  
+  <select id="findActiveBookingsByUserId" resultType="int">
+    SELECT COUNT(*)
+    FROM bookings b
+    JOIN screenings s ON b.screening_id = s.screening_id
+    WHERE b.user_id = #{userId}
+      AND b.booking_status = 'DONE'
+      AND (s.screening_date + s.start_time) > CURRENT_TIMESTAMP
+  </select>
 </mapper>

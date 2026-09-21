@@ -22,6 +22,7 @@
   <mappers>
     <mapper resource="mapper/HealthMapper.xml"/>
     <mapper resource="mapper/UserMapper.xml"/>
+    <mapper resource="mapper/BookingMapper.xml"/>
     <mapper resource="mapper/MovieMapper.xml"/>
     <mapper resource="mapper/AdminMapper.xml"/>
     <mapper resource="mapper/ScreeningMapper.xml"/>
