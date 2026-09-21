@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import com.kyobo.server.entity.MovieListItem;
+import com.kyobo.server.entity.User;
 import com.kyobo.server.service.MovieService;
 
 public class MovieController {
@@ -19,7 +20,7 @@ public class MovieController {
     }
 
     /** @return false면 프로그램을 종료하고, true면 홈 메뉴로 돌아간다. */
-    public boolean runMovieList() {
+    public boolean runMovieList(User currentUser) {
         List<MovieListItem> movies = movieService.getMovieList();
         printMovieList(movies);
 
@@ -32,7 +33,7 @@ public class MovieController {
                             printInvalidMenu();
                         } else {
                             boolean continueProgram =
-                            runMovieDetail();
+                            runMovieDetail(currentUser);
 
                             if (continueProgram == false){
                                 return false;
@@ -76,9 +77,8 @@ public class MovieController {
                 : "[1. 영화 상세 조회] [2. 뒤로가기] [0. 종료]");
     }
 
-    private boolean runMovieDetail() {
-        // 영화 상세 조회(F-05)가 구현되면 해당 컨트롤러로 위임한다.
-        return movieDetailController.runMovieDetail();
+    private boolean runMovieDetail(User currentUser) {
+        return movieDetailController.runMovieDetail(currentUser);
     }
 
     private void printInvalidMenu() {

@@ -3,6 +3,8 @@ package com.kyobo.server.controller;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
+import com.kyobo.server.common.GoHomeSignal;
+import com.kyobo.server.common.RequireLoginSignal;
 import com.kyobo.server.entity.User;
 
 public class ConsoleController {
@@ -46,11 +48,10 @@ public class ConsoleController {
                 }
                 switch (selected) {
                     case 1:
-                        programRunning = movieController.runMovieList();
+                        programRunning = movieController.runMovieList(currentUser);
                         break;
                     case 2:
-                        currentUser = userController.runSignIn();
-                        runUserHome();
+                        loginAndEnterUserHome();
                         break;
                     case 3:
                         if (!userController.runSignUp()) {
@@ -68,9 +69,16 @@ public class ConsoleController {
                 System.out.println("숫자만 입력해 주세요.");
             } catch (IllegalArgumentException e) {
                 System.out.println(e.getMessage());
+            } catch (RequireLoginSignal e) {
+                loginAndEnterUserHome();
             }
             System.out.println();
         }
+    }
+
+    private void loginAndEnterUserHome() {
+        currentUser = userController.runSignIn();
+        runUserHome();
     }
 
     private void runUserHome() {
@@ -85,7 +93,7 @@ public class ConsoleController {
                 }
                 switch (selected) {
                     case 1:
-                        programRunning = movieController.runMovieList();
+                        programRunning = movieController.runMovieList(currentUser);
                         break;
                     case 2:
                         // TODO: 예매 내역 조회 구현 후 수정
@@ -105,6 +113,8 @@ public class ConsoleController {
                 System.out.println("숫자만 입력해 주세요.");
             } catch (IllegalArgumentException e) {
                 System.out.println(e.getMessage());
+            } catch (GoHomeSignal e) {
+                // 예매 등 중첩 화면에서 홈으로 복귀 확정 - 별도 처리 없이 메인 메뉴 루프 계속
             }
             System.out.println();
         }

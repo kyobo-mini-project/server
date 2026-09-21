@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kyobo.server.mapper.SeatMapper">
+
+  <select id="findSeatMap" resultType="com.kyobo.server.entity.Seat">
+    SELECT s.seat_id,
+           s.room_id,
+           s.row_name,
+           s.col_num,
+           (bs.booked_seat_id IS NOT NULL) AS is_booked
+    FROM seats s
+    LEFT JOIN booked_seats bs
+           ON bs.seat_id = s.seat_id
+          AND bs.screening_id = #{screeningId}
+    WHERE s.room_id = #{roomId}
+      AND s.is_active = TRUE
+    ORDER BY s.row_name, s.col_num
+  </select>
+
+</mapper>
