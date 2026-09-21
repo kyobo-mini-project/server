@@ -8,6 +8,14 @@ import com.kyobo.server.entity.MovieListItem;
 import com.kyobo.server.entity.User;
 import com.kyobo.server.service.MovieService;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+
+import com.kyobo.server.common.ApiResponse;
+import com.kyobo.server.entity.Movie;
+
+import com.kyobo.server.entity.Genre;
+
 public class MovieController {
     private final Scanner scanner;
     private final MovieService movieService;
@@ -153,5 +161,158 @@ public class MovieController {
             return false;
         }
         return true;
+    }
+
+    public void runMovieRegistration() {
+        System.out.println("===== 영화 등록 =====");
+
+        String title = readRequiredText("영화 제목: ");
+        int ageLimit = readRegistrationNumber(
+                "관람 가능 나이 (전체 관람가: 0): ", 0);
+        int runningTime = readRegistrationNumber(
+                "상영 시간 (분): ", 1);
+        LocalDate releaseDate = readReleaseDate();
+        String content = readRequiredText("영화 소개: ");
+        String director = readRequiredText("감독: ");
+        // 장르 목록 조회
+        ApiResponse<List<Genre>> genreResponse =
+                movieService.getGenreList();
+
+        if (!"00".equals(genreResponse.getStatusCode())) {
+            System.out.println(genreResponse.getStatusMessage());
+            return;
+        }
+
+        List<Genre> genres = genreResponse.getData();
+
+        if (genres.isEmpty()) {
+            System.out.println("등록된 장르가 없습니다.");
+            return;
+        }
+
+// 장르번호와 이름 출력
+        System.out.println("===== 장르 목록 =====");
+
+        for (int i = 0; i < genres.size(); i++) {
+            Genre genre = genres.get(i);
+
+            String item = genre.getGenreId() + ". " + genre.getGenreName();
+            System.out.printf("%-20s", item);
+
+            // 5개를 출력했거나 마지막 장르라면 줄바꿈
+            if ((i + 1) % 5 == 0 || i == genres.size() - 1) {
+                System.out.println();
+            }
+        }
+
+// 출력된 목록을 보고 입력
+        List<Integer> genreIds = readGenreIds(genres);
+
+        Movie movie = new Movie();
+        movie.setTitle(title);
+        movie.setAgeLimit(ageLimit);
+        movie.setRunningTime(runningTime);
+        movie.setReleaseDate(releaseDate);
+        movie.setContent(content);
+        movie.setDirector(director);
+
+        ApiResponse<Void> response = movieService.insertMovie(movie, genreIds);
+        System.out.println(response.getStatusMessage());
+    }
+
+    // 빈 문자열이면 다시 입력받기
+    private String readRequiredText(String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            String input = scanner.nextLine().trim();
+
+            if (input.isEmpty()) {
+                System.out.println("내용을 입력해 주세요.");
+                continue;
+            }
+
+            return input;
+        }
+    }
+
+    // 정수인지, 최솟값 이상인지 검사하기
+    private int readRegistrationNumber(String prompt, int min) {
+        while (true) {
+            String input = readRequiredText(prompt);
+
+            try {
+                int number = Integer.parseInt(input);
+
+                if (number < min) {
+                    System.out.println(min + " 이상의 숫자를 입력해 주세요.");
+                    continue;
+                }
+
+                return number;
+            } catch (NumberFormatException e) {
+                System.out.println("정수를 입력해 주세요.");
+            }
+        }
+    }
+
+    // 실제로 존재하는 날짜인지 검사하기
+    private LocalDate readReleaseDate() {
+        while (true) {
+            String input = readRequiredText("개봉일 (예: 2026-09-30): ");
+
+            try {
+                return LocalDate.parse(input);
+            } catch (DateTimeParseException e) {
+                System.out.println(
+                        "올바른 날짜를 yyyy-MM-dd 형식으로 입력해 주세요.");
+            }
+        }
+    }
+    private List<Integer> readGenreIds(List<Genre> genres) {
+        while (true) {
+            String input = readRequiredText(
+                    "장르 번호 (여러 개는 쉼표로 구분, 예: 1,3,5): ");
+
+            List<Integer> genreIds = new java.util.ArrayList<>();
+            boolean valid = true;
+
+            for (String part : input.split(",", -1)) {
+                int genreId;
+
+                try {
+                    genreId = Integer.parseInt(part.trim());
+                } catch (NumberFormatException e) {
+                    System.out.println(
+                            "장르 번호를 쉼표로 구분해 입력해 주세요.");
+                    valid = false;
+                    break;
+                }
+
+                boolean exists = false;
+
+                for (Genre genre : genres) {
+                    if (Integer.valueOf(genreId).equals(genre.getGenreId())) {
+                        exists = true;
+                        break;
+                    }
+                }
+
+                if (!exists) {
+                    System.out.println(
+                            "목록에 없는 장르 번호입니다: " + genreId);
+                    valid = false;
+                    break;
+                }
+
+                // 같은 번호를 여러 번 입력해도 한 번만 추가
+                if (!genreIds.contains(genreId)) {
+                    genreIds.add(genreId);
+                }
+            }
+
+            if (valid) {
+                return genreIds;
+            }
+        }
     }
 }

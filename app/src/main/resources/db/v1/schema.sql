@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS genres (
 );
 
 CREATE TABLE IF NOT EXISTS movies (
-    movie_id     INTEGER PRIMARY KEY,
+    movie_id     INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     title        VARCHAR(200),
     age_limit    INTEGER,
     running_time INTEGER,

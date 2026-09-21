@@ -2,6 +2,7 @@ package com.kyobo.server.mapper;
 
 import java.util.List;
 
+import com.kyobo.server.entity.Movie;
 import org.apache.ibatis.annotations.Param;
 
 import com.kyobo.server.entity.Movie;
@@ -11,6 +12,7 @@ import com.kyobo.server.entity.MovieSeatCount;
 
 public interface MovieMapper {
     List<MovieListItem> findAllWithGenres();
+    int insert(Movie movie);
 
     List<Movie> findAll();
 

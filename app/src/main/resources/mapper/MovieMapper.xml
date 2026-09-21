@@ -22,6 +22,19 @@
     GROUP BY m.movie_id, m.title
     ORDER BY m.movie_id ASC
   </select>
+    <insert id = "insert" useGeneratedKeys="true" keyProperty="movieId" keyColumn="movie_id">
+        INSERT INTO movies (
+        title,
+        age_limit,
+        running_time,
+        release_date,
+        content,
+        director
+        )
+        VALUES (#{title},#{ageLimit},#{runningTime},#{releaseDate},#{content},#{director}
+
+        )
+    </insert>
 
   <select id="findAll" resultType="com.kyobo.server.entity.Movie">
     SELECT movie_id,
