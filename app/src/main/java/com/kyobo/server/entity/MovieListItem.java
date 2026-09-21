@@ -5,6 +5,7 @@ public class MovieListItem {
     private int movieId;
     private String title;
     private String genres;
+    private double occupancyRate;
 
     public int getMovieId() {
         return movieId;
@@ -28,5 +29,13 @@ public class MovieListItem {
 
     public void setGenres(String genres) {
         this.genres = genres;
+    }
+
+    public double getOccupancyRate() {
+        return occupancyRate;
+    }
+
+    public void setOccupancyRate(double occupancyRate) {
+        this.occupancyRate = occupancyRate;
     }
 }

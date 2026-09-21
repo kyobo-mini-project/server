@@ -59,16 +59,63 @@ public class MovieController {
         System.out.println("================================================");
         System.out.println("상영 영화 목록");
         System.out.println("------------------------------------------------");
-        int count = 0;
         if (movies.isEmpty()) {
             System.out.println("현재 상영 중인 영화가 없습니다.");
         } else {
+            int titleWidth = Math.max(8, maxDisplayWidth(movies.stream().map(MovieListItem::getTitle).toList()));
+            int genreWidth = Math.max(8, maxDisplayWidth(movies.stream().map(MovieListItem::getGenres).toList()));
+
             for (MovieListItem movie : movies) {
-                count++;
-                System.out.printf("%d. 제목: %s | 장르: %s%n", movie.getMovieId(), movie.getTitle(), movie.getGenres());
+                System.out.printf("%s  제목: %s  장르: %s  (점유율: %5.1f%%)%n",
+                        padDisplay(movie.getMovieId() + ".", 4),
+                        padDisplay(nullToEmpty(movie.getTitle()), titleWidth),
+                        padDisplay(nullToEmpty(movie.getGenres()), genreWidth),
+                        movie.getOccupancyRate());
             }
         }
         System.out.println("================================================");
+    }
+
+    private int maxDisplayWidth(List<String> values) {
+        int max = 0;
+        for (String value : values) {
+            max = Math.max(max, displayWidth(nullToEmpty(value)));
+        }
+        return max;
+    }
+
+    private String padDisplay(String text, int width) {
+        int padding = width - displayWidth(text);
+        if (padding <= 0) {
+            return text;
+        }
+        return text + " ".repeat(padding);
+    }
+
+    /** 터미널 기준 표시 폭. 한글 등 전각은 2칸으로 계산한다. */
+    private int displayWidth(String text) {
+        int width = 0;
+        for (int i = 0; i < text.length(); ) {
+            int codePoint = text.codePointAt(i);
+            i += Character.charCount(codePoint);
+            width += isWideChar(codePoint) ? 2 : 1;
+        }
+        return width;
+    }
+
+    private boolean isWideChar(int codePoint) {
+        Character.UnicodeBlock block = Character.UnicodeBlock.of(codePoint);
+        return block == Character.UnicodeBlock.HANGUL_SYLLABLES
+                || block == Character.UnicodeBlock.HANGUL_JAMO
+                || block == Character.UnicodeBlock.HANGUL_COMPATIBILITY_JAMO
+                || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+                || block == Character.UnicodeBlock.CJK_SYMBOLS_AND_PUNCTUATION
+                || block == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS
+                || (codePoint >= 0xFF01 && codePoint <= 0xFF60);
+    }
+
+    private String nullToEmpty(String value) {
+        return value == null ? "" : value;
     }
 
     private void printSubMenu(boolean isEmpty) {

@@ -6,4 +6,8 @@ public interface UserMapper {
     User findByLoginId(String loginId);
 
     int insert(User user);
+
+    User findById(Integer userId);
+
+    int softDelete(Integer userId);
 }
