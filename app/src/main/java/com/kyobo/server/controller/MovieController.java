@@ -64,7 +64,8 @@ public class MovieController {
         } else {
             for (MovieListItem movie : movies) {
                 count++;
-                System.out.printf("%d. 제목: %s | 장르: %s%n", movie.getMovieId(), movie.getTitle(), movie.getGenres());
+                System.out.printf("%d. 제목: %s | 장르: %s (점유율: %.1f%%)%n",
+                        movie.getMovieId(), movie.getTitle(), movie.getGenres(), movie.getOccupancyRate());
             }
         }
         System.out.println("================================================");
