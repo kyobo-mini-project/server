@@ -55,6 +55,38 @@ public class MovieOccupancyService {
         return empty;
     }
 
+    /**
+     * 점유율 높은 순 순위 (1부터). 동점이면 movieId 오름차순.
+     */
+    public int getOccupancyRank(int movieId) {
+        List<MovieOccupancy> rankings = new ArrayList<>(getAllOccupancies());
+        boolean included = false;
+        for (MovieOccupancy occupancy : rankings) {
+            if (occupancy.getMovieId() == movieId) {
+                included = true;
+                break;
+            }
+        }
+        if (!included) {
+            rankings.add(getOccupancy(movieId));
+        }
+
+        rankings.sort((left, right) -> {
+            int byRate = Double.compare(right.getOccupancyRate(), left.getOccupancyRate());
+            if (byRate != 0) {
+                return byRate;
+            }
+            return Integer.compare(left.getMovieId(), right.getMovieId());
+        });
+
+        for (int i = 0; i < rankings.size(); i++) {
+            if (rankings.get(i).getMovieId() == movieId) {
+                return i + 1;
+            }
+        }
+        return rankings.size();
+    }
+
     private static Map<Integer, Long> toCountMap(List<MovieSeatCount> rows) {
         Map<Integer, Long> map = new HashMap<>();
         if (rows == null) {
