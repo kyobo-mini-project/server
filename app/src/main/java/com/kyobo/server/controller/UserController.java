@@ -2,10 +2,11 @@ package com.kyobo.server.controller;
 
 import java.util.Scanner;
 
+import org.apache.ibatis.exceptions.PersistenceException;
+
 import com.kyobo.server.entity.User;
 import com.kyobo.server.service.UserService;
 import com.kyobo.server.service.UserService.WithdrawResult;
-import org.apache.ibatis.exceptions.PersistenceException;
 
 public class UserController {
     private final Scanner scanner;
@@ -103,7 +104,7 @@ public class UserController {
      */
     public User runSignIn() {
         System.out.println("===========================================================");
-        System.out.println("로그인 (이전 화면: 0)");
+        System.out.println("로그인 (취소: 0)");
         System.out.println("-----------------------------------------------------------");
 
         String loginId = readLine("[ID] : ");
