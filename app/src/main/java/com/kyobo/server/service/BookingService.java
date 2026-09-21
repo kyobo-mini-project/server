@@ -76,4 +76,14 @@ public class BookingService {
             return ApiResponse.error("예매 처리 중 오류가 발생했습니다.");
         }
     }
+    
+    public ApiResponse<List<Booking>> findBookingHistory(int userId) {
+        try (SqlSession session = MyBatisConfig.sqlSessionFactory().openSession()) {
+            BookingMapper bookingMapper = session.getMapper(BookingMapper.class);
+            List<Booking> bookings = bookingMapper.findByUser(userId);
+            return ApiResponse.success(bookings);
+        } catch (Exception e) {
+            return ApiResponse.error("예매 내역 조회 중 오류가 발생했습니다.");
+        }
+    }
 }
