@@ -180,16 +180,34 @@ public class AdminController {
                         admin.getCinemaId(), roomId, "1".equals(choice));
 
                 System.out.println(result.message());
-
                 for (RoomAdmin buyer : result.buyers()) {
                     System.out.printf(
-                            "아이디: %s | 전화번호: %s | 예매 좌석: %d개%n좌석: %s%n",
+                            "아이디: %s | 전화번호: %s | 예매 좌석: %d개%n",
                             buyer.getLoginId(),
                             buyer.getPhoneNumber(),
-                            buyer.getSeatCount(),
-                            buyer.getSeatLocations() == null
-                                    ? "좌석 정보 확인 필요"
-                                    : buyer.getSeatLocations());
+                            buyer.getSeatCount());
+
+                    String locations = buyer.getSeatLocations();
+
+                    if (locations == null || locations.isBlank()) {
+                        System.out.println("좌석 정보 확인 필요");
+                        continue;
+                    }
+
+                    System.out.println("좌석:");
+                    String[] seats = locations.split(",\\s*");
+
+                    for (int i = 0; i < seats.length; i++) {
+                        System.out.print(seats[i]);
+
+                        if ((i + 1) % 3 == 0 || i == seats.length - 1) {
+                            System.out.println();
+                        } else {
+                            System.out.print(" | ");
+                        }
+                    }
+
+                    System.out.println();
                 }
 
             } catch (NumberFormatException e) {

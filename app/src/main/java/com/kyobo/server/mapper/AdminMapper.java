@@ -1,5 +1,8 @@
 package com.kyobo.server.mapper;
 
+import java.util.List;
+import org.apache.ibatis.annotations.Param;
+
 import com.kyobo.server.entity.Admin;
 import com.kyobo.server.entity.RoomAdmin;
 
