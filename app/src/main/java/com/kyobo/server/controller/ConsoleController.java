@@ -83,7 +83,9 @@ public class ConsoleController {
 
     private void loginAndEnterUserHome() {
         currentUser = userController.runSignIn();
-        runUserHome();
+        if (currentUser != null) {
+            runUserHome();
+        }
     }
 
     private void runUserHome() {
