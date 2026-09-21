@@ -13,6 +13,8 @@ import java.time.format.DateTimeParseException;
 import com.kyobo.server.common.ApiResponse;
 import com.kyobo.server.entity.Movie;
 
+import com.kyobo.server.entity.Genre;
+
 public class MovieController {
     private final Scanner scanner;
     private final MovieService movieService;
@@ -117,6 +119,39 @@ public class MovieController {
         LocalDate releaseDate = readReleaseDate();
         String content = readRequiredText("영화 소개: ");
         String director = readRequiredText("감독: ");
+        // 장르 목록 조회
+        ApiResponse<List<Genre>> genreResponse =
+                movieService.getGenreList();
+
+        if (!"00".equals(genreResponse.getStatusCode())) {
+            System.out.println(genreResponse.getStatusMessage());
+            return;
+        }
+
+        List<Genre> genres = genreResponse.getData();
+
+        if (genres.isEmpty()) {
+            System.out.println("등록된 장르가 없습니다.");
+            return;
+        }
+
+// 장르번호와 이름 출력
+        System.out.println("===== 장르 목록 =====");
+
+        for (int i = 0; i < genres.size(); i++) {
+            Genre genre = genres.get(i);
+
+            String item = genre.getGenreId() + ". " + genre.getGenreName();
+            System.out.printf("%-20s", item);
+
+            // 5개를 출력했거나 마지막 장르라면 줄바꿈
+            if ((i + 1) % 5 == 0 || i == genres.size() - 1) {
+                System.out.println();
+            }
+        }
+
+// 출력된 목록을 보고 입력
+        int genreId = readRegistrationNumber("장르 번호: ", 1);
 
         Movie movie = new Movie();
         movie.setTitle(title);
@@ -126,7 +161,7 @@ public class MovieController {
         movie.setContent(content);
         movie.setDirector(director);
 
-        ApiResponse<Void> response = movieService.insertMovie(movie);
+        ApiResponse<Void> response = movieService.insertMovie(movie, genreId);
         System.out.println(response.getStatusMessage());
     }
 
