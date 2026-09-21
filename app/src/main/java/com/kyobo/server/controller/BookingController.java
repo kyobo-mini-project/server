@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import com.kyobo.server.common.ApiResponse;
 import com.kyobo.server.common.GoHomeSignal;
+import com.kyobo.server.entity.Booking;
 import com.kyobo.server.entity.Cinema;
 import com.kyobo.server.entity.Screening;
 import com.kyobo.server.entity.Seat;
@@ -125,6 +126,52 @@ public class BookingController {
                 }
             }
         }
+    }
+
+    public void runHistory(User user) {
+        ApiResponse<List<Booking>> historyResponse = bookingService.findBookingHistory(user.getUserId());
+        if (!historyResponse.isSuccess()) {
+            System.out.println(historyResponse.getStatusMessage());
+            return;
+        }
+        List<Booking> bookings = historyResponse.getData();
+        if (bookings.isEmpty()) {
+            System.out.println("예매 내역이 없습니다.");
+            return;
+        }
+
+        while (true) {
+            Booking selected = chooseFromList(bookings, "예매 내역을 선택하세요. (0: 이전 화면으로)",
+                    b -> b.getMovieTitle() + " / " + b.getCinemaName() + " / " + b.getScreeningDate() + " "
+                            + b.getStartTime() + " / 좌석: " + b.getSeatCodes());
+            if (selected == null) {
+                return;
+            }
+            printBookingDetail(selected);
+        }
+    }
+
+    private void printBookingDetail(Booking booking) {
+        System.out.println();
+        System.out.println(DIVIDER);
+        System.out.println("예매 번호: " + booking.getBookingId());
+        System.out.println("-----------------------------------------------------------");
+        System.out.println(booking.getMovieTitle());
+        System.out.println(booking.getCinemaName() + " " + booking.getFloor() + "층 " + booking.getRoomName());
+        System.out.println(booking.getSeatCodes());
+        System.out.println(booking.getScreeningDate() + " " + booking.getStartTime());
+        System.out.println("예매 상태: " + statusLabel(booking.getBookingStatus()));
+        System.out.println(DIVIDER);
+
+        String input = readLine("1: 예매 취소, 0: 목록으로 돌아가기: ");
+        if (input.equals("1")) {
+            // TODO: 예매 취소 기능 구현 예정
+            System.out.println("예매 취소 기능은 준비 중입니다.");
+        }
+    }
+
+    private String statusLabel(String status) {
+        return "CANCELED".equals(status) ? "예매 취소" : "예매완료";
     }
 
     /** @return 선택한 날짜, 0 입력 시 null (이전 단계로) */

@@ -101,8 +101,8 @@ public class ConsoleController {
                         programRunning = movieController.runMovieList(currentUser);
                         break;
                     case 2:
-                        // TODO: 예매 내역 조회 구현 후 수정
-                        System.out.println("예매 내역 조회 구현 필요");
+                        
+                        new BookingController(scanner).runHistory(currentUser);
                         break;
                     case 3:
                         requestLogout();
