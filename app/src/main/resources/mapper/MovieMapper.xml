@@ -23,6 +23,22 @@
     ORDER BY m.movie_id ASC
   </select>
 
+  <select id="findAll" resultType="com.kyobo.server.entity.Movie">
+    SELECT movie_id,
+           title,
+           running_time
+    FROM movies
+    ORDER BY movie_id ASC
+  </select>
+
+  <select id="findById" resultType="com.kyobo.server.entity.Movie">
+    SELECT movie_id,
+           title,
+           running_time
+    FROM movies
+    WHERE movie_id = #{movieId}
+  </select>
+
   <select id="findMovieDetail"
 resultType="com.kyobo.server.entity.MovieDetail" >
       SELECT
