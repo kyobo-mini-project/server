@@ -25,5 +25,9 @@
     <mapper resource="mapper/BookingMapper.xml"/>
     <mapper resource="mapper/MovieMapper.xml"/>
     <mapper resource="mapper/AdminMapper.xml"/>
+    <mapper resource="mapper/ScreeningMapper.xml"/>
+    <mapper resource="mapper/SeatMapper.xml"/>
+    <mapper resource="mapper/BookingMapper.xml"/>
+    <mapper resource="mapper/BookedSeatMapper.xml"/>
   </mappers>
 </configuration>
