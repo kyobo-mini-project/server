@@ -7,6 +7,8 @@ import com.kyobo.server.config.FieldEncryptor;
 import com.kyobo.server.config.MyBatisConfig;
 import com.kyobo.server.entity.Admin;
 import com.kyobo.server.mapper.AdminMapper;
+import java.util.List;
+import com.kyobo.server.entity.RoomAdmin;
 
 public class AdminService {
     public ApiResponse<Admin> findAdminByCode(String code) {
@@ -31,6 +33,72 @@ public class AdminService {
             return ApiResponse.fail("02", "비밀번호가 일치하지 않습니다.");
         } catch (Exception e) {
             return ApiResponse.error("서버 오류가 발생했습니다.");
+        }
+    }
+
+    public record RoomResult(String message, List<Room> buyers) {}
+
+    public List<Room> getRooms(int cinemaId) {
+        try (SqlSession session =
+                     MyBatisConfig.sqlSessionFactory().openSession()) {
+            return session.getMapper(AdminMapper.class)
+                    .findRoomsByCinemaId(cinemaId);
+        }
+    }
+
+    public RoomResult changeRoom(int cinemaId, int roomId, boolean active) {
+        try (SqlSession session =
+                     MyBatisConfig.sqlSessionFactory().openSession(false)) {
+            try {
+                AdminMapper mapper = session.getMapper(AdminMapper.class);
+
+                if (!active) {
+                    mapper.lockBookings();
+                }
+
+                Room room = mapper.findRoomForUpdate(cinemaId, roomId);
+
+                if (room == null) {
+                    session.rollback();
+                    return new RoomResult("해당 지점의 상영관이 아닙니다.", List.of());
+                }
+
+                if (Boolean.valueOf(active).equals(room.getActive())) {
+                    session.rollback();
+                    return new RoomResult("이미 같은 상태입니다.", List.of());
+                }
+
+                if (!active) {
+                    List<Room> buyers = mapper.findBookedBuyers(cinemaId, roomId);
+
+                    if (!buyers.isEmpty()) {
+                        session.rollback();
+
+                        for (Room buyer : buyers) {
+                            try {
+                                buyer.setPhoneNumber(
+                                        FieldEncryptor.decrypt(buyer.getPhoneNumber()));
+                            } catch (RuntimeException e) {
+                                buyer.setPhoneNumber("복호화 실패");
+                            }
+                        }
+
+                        return new RoomResult(
+                                "예매자가 있어 운영 불가로 변경할 수 없습니다.", buyers);
+                    }
+                }
+
+                if (mapper.updateRoomActive(cinemaId, roomId, active) != 1) {
+                    throw new IllegalStateException("상태 변경 실패");
+                }
+
+                session.commit();
+                return new RoomResult("상태를 변경했습니다.", List.of());
+
+            } catch (RuntimeException e) {
+                session.rollback();
+                throw e;
+            }
         }
     }
 }
