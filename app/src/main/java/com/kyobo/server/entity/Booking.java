@@ -11,8 +11,6 @@ public class Booking {
     private String cinemaName;
     private String roomName;
     private String seatCodes;
-    private String bookingStatus;
-    private java.time.LocalDateTime bookingDate;
     private Integer floor;
 
     public Integer getBookingId() {
@@ -70,14 +68,6 @@ public class Booking {
         return seatCodes;
     }
 
-    public String getBookingStatus() {
-        return bookingStatus;
-    }
-
-    public java.time.LocalDateTime getBookingDate() {
-        return bookingDate;
-    }
-    
     public Integer getFloor() {
         return floor;
     }
