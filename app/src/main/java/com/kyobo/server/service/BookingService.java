@@ -56,7 +56,7 @@ public class BookingService {
 
             Booking booking = new Booking();
             booking.setUserId(userId);
-            booking.setMovieId(String.valueOf(movieId));
+            booking.setMovieId(movieId);
             booking.setScreeningId(screeningId);
             bookingMapper.insert(booking);
 

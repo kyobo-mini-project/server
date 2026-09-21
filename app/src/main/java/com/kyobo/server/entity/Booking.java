@@ -3,8 +3,7 @@ package com.kyobo.server.entity;
 public class Booking {
     private Integer bookingId;
     private Integer userId;
-    /** bookings.movie_id 컬럼이 VARCHAR라서 movies.movie_id(INTEGER)를 문자열로 변환해 저장한다. */
-    private String movieId;
+    private Integer movieId;
     private Integer screeningId;
 
     public Integer getBookingId() {
@@ -23,11 +22,11 @@ public class Booking {
         this.userId = userId;
     }
 
-    public String getMovieId() {
+    public Integer getMovieId() {
         return movieId;
     }
 
-    public void setMovieId(String movieId) {
+    public void setMovieId(Integer movieId) {
         this.movieId = movieId;
     }
 
