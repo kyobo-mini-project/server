@@ -53,7 +53,7 @@
     JOIN movies m ON m.movie_id = s.movie_id
     WHERE s.cinema_id = #{cinemaId}
       AND s.screening_date = #{date}
-    ORDER BY s.screening_id ASC
+    ORDER BY s.start_time ASC, s.screening_id ASC
   </select>
 
   <!--
