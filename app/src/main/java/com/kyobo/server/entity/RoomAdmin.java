@@ -1,7 +1,11 @@
 package com.kyobo.server.entity;
 
-public class RoomAdmin {
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
+public class RoomAdmin {
     private Integer roomId;
     private String roomName;
     private Integer floor;
@@ -19,87 +23,4 @@ public class RoomAdmin {
     private String movieTitle;
     private java.time.LocalDate screeningDate;
     private java.time.LocalTime startTime;
-
-    public String getMovieTitle() { return movieTitle; }
-    public void setMovieTitle(String movieTitle) { this.movieTitle = movieTitle; }
-
-    public java.time.LocalDate getScreeningDate() { return screeningDate; }
-    public void setScreeningDate(java.time.LocalDate screeningDate) {
-        this.screeningDate = screeningDate;
-    }
-
-    public java.time.LocalTime getStartTime() { return startTime; }
-    public void setStartTime(java.time.LocalTime startTime) { this.startTime = startTime; }
-
-    public Integer getRoomId() {
-        return roomId;}
-
-    public void setRoomId(Integer roomId) {
-        this.roomId = roomId;}
-
-    public String getRoomName() {
-        return roomName;}
-
-    public void setRoomName(String roomName) {
-        this.roomName = roomName;}
-
-    public Integer getFloor() {
-        return floor;}
-
-    public void setFloor(Integer floor) {
-        this.floor = floor;}
-
-    public Boolean getActive() {
-        return active;}
-
-    public void setActive(Boolean active) {
-        this.active = active;}
-
-    public Integer getBookingId() {
-        return bookingId;}
-
-    public void setBookingId(Integer bookingId) {
-        this.bookingId = bookingId;}
-
-    public Integer getUserId() {
-        return userId;}
-
-    public void setUserId(Integer userId) {
-        this.userId = userId;}
-
-    public String getLoginId() {
-        return loginId;}
-
-    public void setLoginId(String loginId) {
-        this.loginId = loginId;}
-
-    public String getPhoneNumber() {
-        return phoneNumber;}
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;}
-
-    public Integer getBookedSeatId() {
-        return bookedSeatId;}
-
-    public void setBookedSeatId(Integer bookedSeatId) {
-        this.bookedSeatId = bookedSeatId;}
-
-    public Integer getScreeningId() {
-        return screeningId;}
-
-    public void setScreeningId(Integer screeningId) {
-        this.screeningId = screeningId;}
-
-    public String getRowName() {
-        return rowName;}
-
-    public void setRowName(String rowName) {
-        this.rowName = rowName;}
-
-    public Integer getColNum() {
-        return colNum;}
-
-    public void setColNum(Integer colNum) {
-        this.colNum = colNum;}
 }

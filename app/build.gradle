@@ -23,6 +23,8 @@ dependencies {
     implementation libs.mybatis
     implementation libs.jbcrypt
     runtimeOnly libs.postgresql
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
 }
 
 testing {

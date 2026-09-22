@@ -1,8 +1,13 @@
 package com.kyobo.server.entity;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+@Getter
+@Setter
 public class Screening {
     private Integer screeningId;
     private Integer movieId;
@@ -15,92 +20,4 @@ public class Screening {
     private LocalTime startTime;
     private LocalTime endTime;
     private String movieTitle;
-
-    public Integer getScreeningId() {
-        return screeningId;
-    }
-
-    public void setScreeningId(Integer screeningId) {
-        this.screeningId = screeningId;
-    }
-
-    public Integer getMovieId() {
-        return movieId;
-    }
-
-    public void setMovieId(Integer movieId) {
-        this.movieId = movieId;
-    }
-
-    public Integer getCinemaId() {
-        return cinemaId;
-    }
-
-    public void setCinemaId(Integer cinemaId) {
-        this.cinemaId = cinemaId;
-    }
-
-    public String getCinemaName() {
-        return cinemaName;
-    }
-
-    public void setCinemaName(String cinemaName) {
-        this.cinemaName = cinemaName;
-    }
-
-    public Integer getRoomId() {
-        return roomId;
-    }
-
-    public void setRoomId(Integer roomId) {
-        this.roomId = roomId;
-    }
-
-    public String getRoomName() {
-        return roomName;
-    }
-
-    public void setRoomName(String roomName) {
-        this.roomName = roomName;
-    }
-
-    public Integer getFloor() {
-        return floor;
-    }
-
-    public void setFloor(Integer floor) {
-        this.floor = floor;
-    }
-
-    public LocalDate getScreeningDate() {
-        return screeningDate;
-    }
-
-    public void setScreeningDate(LocalDate screeningDate) {
-        this.screeningDate = screeningDate;
-    }
-
-    public LocalTime getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(LocalTime startTime) {
-        this.startTime = startTime;
-    }
-
-    public LocalTime getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(LocalTime endTime) {
-        this.endTime = endTime;
-    }
-
-    public String getMovieTitle() {
-        return movieTitle;
-    }
-
-    public void setMovieTitle(String movieTitle) {
-        this.movieTitle = movieTitle;
-    }
 }
