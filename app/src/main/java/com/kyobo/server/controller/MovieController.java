@@ -17,6 +17,8 @@ import com.kyobo.server.entity.Movie;
 import com.kyobo.server.entity.Genre;
 
 public class MovieController {
+    private enum SearchResultAction { SEARCH_AGAIN, BACK, EXIT }
+
     private final Scanner scanner;
     private final MovieService movieService;
     private final MovieDetailController movieDetailController;
@@ -61,6 +63,154 @@ public class MovieController {
                 printInvalidMenu();
             }
         }
+    }
+
+    public boolean runSearchMovie() {
+        return runSearchMovie(null);
+    }
+
+    public boolean runSearchMovie(User currentUser) {
+        while (true) {
+            System.out.println("[1. 제목 검색] [2. 장르 검색] [3. 뒤로가기] [0. 종료]");
+            try {
+                switch (readInt("기능 선택: ")) {
+                    case 1 -> {
+                        if (!runSearchByTitle(currentUser)) return false;
+                    }
+                    case 2 -> {
+                        if (!runSearchByGenre(currentUser)) return false;
+                    }
+                    case 3 -> { return true; }
+                    case 0 -> { return requestExit(); }
+                    default -> printInvalidMenu();
+                }
+            } catch (InputMismatchException e) {
+                printInvalidMenu();
+            }
+        }
+    }
+
+    private boolean runSearchByTitle(User currentUser) {
+        while (true) {
+            System.out.print("검색할 영화 제목(2글자 이상)을 입력해 주세요: ");
+            String keyword = scanner.nextLine().trim();
+            if (keyword.isEmpty()) {
+                System.out.println("검색어를 입력해 주세요.");
+                continue;
+            }
+            if (keyword.length() < 2) {
+                System.out.println("제목 검색어는 2글자 이상 입력해 주세요.");
+                continue;
+            }
+
+            SearchResultAction action = runSearchResults(
+                    keyword, movieService.searchMoviesByTitle(keyword), currentUser);
+            if (action == SearchResultAction.EXIT) return false;
+            if (action == SearchResultAction.BACK) return true;
+        }
+    }
+
+    private boolean runSearchByGenre(User currentUser) {
+        ApiResponse<List<Genre>> response = movieService.getGenreList();
+        if (!"00".equals(response.getStatusCode())) {
+            System.out.println(response.getStatusMessage());
+            return true;
+        }
+
+        List<Genre> genres = response.getData();
+        if (genres.isEmpty()) {
+            System.out.println("등록된 장르가 없습니다.");
+            return true;
+        }
+
+        while (true) {
+            printGenres(genres);
+            System.out.print("검색할 장르 번호 또는 장르명을 입력해 주세요: ");
+            Genre selectedGenre = findGenre(genres, scanner.nextLine().trim());
+            if (selectedGenre == null) {
+                System.out.println("올바른 장르를 선택해 주세요.");
+                continue;
+            }
+
+            SearchResultAction action = runSearchResults(selectedGenre.getGenreName(),
+                    movieService.searchMoviesByGenre(selectedGenre.getGenreName()), currentUser);
+            if (action == SearchResultAction.EXIT) return false;
+            if (action == SearchResultAction.BACK) return true;
+        }
+    }
+
+    private SearchResultAction runSearchResults(String keyword, List<MovieListItem> movies, User currentUser) {
+        if (movies.isEmpty()) {
+            System.out.println("'" + keyword + "'에 대한 검색 결과가 없습니다.");
+            while (true) {
+                System.out.println("[1. 다시 검색] [2. 뒤로가기]");
+                try {
+                    switch (readInt("기능 선택: ")) {
+                        case 1 -> { return SearchResultAction.SEARCH_AGAIN; }
+                        case 2 -> { return SearchResultAction.BACK; }
+                        default -> printInvalidMenu();
+                    }
+                } catch (InputMismatchException e) {
+                    printInvalidMenu();
+                }
+            }
+        }
+
+        printSearchResults(keyword, movies);
+        while (true) {
+            System.out.println("[1. 영화 상세 조회] [2. 다시 검색] [3. 뒤로가기] [0. 종료]");
+            try {
+                switch (readInt("기능 선택: ")) {
+                    case 1 -> {
+                        if (!runMovieDetail(currentUser)) return SearchResultAction.EXIT;
+                        printSearchResults(keyword, movies);
+                    }
+                    case 2 -> { return SearchResultAction.SEARCH_AGAIN; }
+                    case 3 -> { return SearchResultAction.BACK; }
+                    case 0 -> {
+                        if (!requestExit()) return SearchResultAction.EXIT;
+                    }
+                    default -> printInvalidMenu();
+                }
+            } catch (InputMismatchException e) {
+                printInvalidMenu();
+            }
+        }
+    }
+
+    private void printSearchResults(String keyword, List<MovieListItem> movies) {
+        System.out.println("================================================");
+        System.out.println("'" + keyword + "' 검색 결과 (총 " + movies.size() + "건)");
+        System.out.println("------------------------------------------------");
+        for (MovieListItem movie : movies) {
+            System.out.println(movie.getMovieId() + ". 제목: " + nullToEmpty(movie.getTitle())
+                    + "  장르: " + nullToEmpty(movie.getGenres()));
+        }
+        System.out.println("================================================");
+    }
+
+    private void printGenres(List<Genre> genres) {
+        System.out.println("[장르 목록]");
+        int columnWidth = 15;
+        for (int i = 0; i < genres.size(); i++) {
+            Genre genre = genres.get(i);
+            String item = genre.getGenreId() + ". " + genre.getGenreName();
+            System.out.print(padDisplay(item, columnWidth));
+            if ((i + 1) % 5 == 0) {
+                System.out.println();
+            } else if (i == genres.size() - 1) {
+                System.out.println();
+            }
+        }
+    }
+
+    private Genre findGenre(List<Genre> genres, String input) {
+        for (Genre genre : genres) {
+            if (genre.getGenreName().equals(input) || String.valueOf(genre.getGenreId()).equals(input)) {
+                return genre;
+            }
+        }
+        return null;
     }
 
     private void printMovieList(List<MovieListItem> movies) {

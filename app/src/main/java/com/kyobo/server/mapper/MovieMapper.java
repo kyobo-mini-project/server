@@ -12,6 +12,8 @@ import com.kyobo.server.entity.MovieSeatCount;
 
 public interface MovieMapper {
     List<MovieListItem> findAllWithGenres();
+    List<MovieListItem> searchByTitle(@Param("keyword") String keyword);
+    List<MovieListItem> searchByGenreName(@Param("genreName") String genreName);
     int insert(Movie movie);
 
     List<Movie> findAll();

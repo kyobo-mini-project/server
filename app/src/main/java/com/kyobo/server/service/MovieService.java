@@ -33,6 +33,28 @@ public class MovieService {
         }
     }
 
+    public List<MovieListItem> searchMoviesByTitle(String keyword) {
+        String trimmedKeyword = keyword == null ? "" : keyword.trim();
+        if (trimmedKeyword.length() < 2) {
+            throw new IllegalArgumentException("제목 검색어는 2글자 이상 입력해 주세요.");
+        }
+
+        try (SqlSession session = MyBatisConfig.sqlSessionFactory().openSession()) {
+            return session.getMapper(MovieMapper.class).searchByTitle(trimmedKeyword);
+        }
+    }
+
+    public List<MovieListItem> searchMoviesByGenre(String genreName) {
+        String trimmedGenreName = genreName == null ? "" : genreName.trim();
+        if (trimmedGenreName.isEmpty()) {
+            throw new IllegalArgumentException("올바른 장르를 선택해 주세요.");
+        }
+
+        try (SqlSession session = MyBatisConfig.sqlSessionFactory().openSession()) {
+            return session.getMapper(MovieMapper.class).searchByGenreName(trimmedGenreName);
+        }
+    }
+
     public ApiResponse<Void> insertMovie(
             Movie movie, List<Integer> genreIds) {
 

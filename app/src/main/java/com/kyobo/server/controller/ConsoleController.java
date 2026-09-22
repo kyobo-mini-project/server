@@ -47,7 +47,7 @@ public class ConsoleController {
         while (programRunning) {
             try {
                 System.out.println("원하시는 기능을 선택해주세요.");
-                System.out.println("[1. 영화 목록 조회] [2. 로그인] [3. 회원가입] [0. 종료]");
+                System.out.println("[1. 영화 검색] [2. 영화 목록 조회] [3. 로그인] [4. 회원가입] [0. 종료]");
                 int selected = readMenuChoice("기능 선택: ");
                 if (selected == ADMIN_MODE_HANDLED) {
                     System.out.println();
@@ -55,12 +55,15 @@ public class ConsoleController {
                 }
                 switch (selected) {
                     case 1:
-                        programRunning = movieController.runMovieList(currentUser);
+                        programRunning = movieController.runSearchMovie(currentUser);
                         break;
                     case 2:
-                        loginAndEnterUserHome();
+                        programRunning = movieController.runMovieList(currentUser);
                         break;
                     case 3:
+                        loginAndEnterUserHome();
+                        break;
+                    case 4:
                         if (!userController.runSignUp()) {
                             programRunning = false;
                         }
@@ -94,7 +97,7 @@ public class ConsoleController {
         while (programRunning && currentUser != null) {
             try {
                 System.out.println("원하시는 기능을 선택해주세요. (" + currentUser.getName() + "님)");
-                System.out.println("[1. 영화 목록 조회] [2. 예매 내역] [3. 로그아웃] [4. 회원 탈퇴] [0. 종료]");
+                System.out.println("[1. 영화 검색] [2. 영화 목록 조회] [3. 예매 내역] [4. 로그아웃] [5. 회원 탈퇴] [0. 종료]");
                 int selected = readMenuChoice("기능 선택: ");
                 if (selected == ADMIN_MODE_HANDLED) {
                     System.out.println();
@@ -102,16 +105,18 @@ public class ConsoleController {
                 }
                 switch (selected) {
                     case 1:
-                        programRunning = movieController.runMovieList(currentUser);
+                        programRunning = movieController.runSearchMovie(currentUser);
                         break;
                     case 2:
-                        
-                        new BookingController(scanner).runHistory(currentUser);
+                        programRunning = movieController.runMovieList(currentUser);
                         break;
                     case 3:
-                        requestLogout();
+                        new BookingController(scanner).runHistory(currentUser);
                         break;
                     case 4:
+                        requestLogout();
+                        break;
+                    case 5:
                         if (userController.runWithdraw(currentUser)) {
                             currentUser = null;
                         }
