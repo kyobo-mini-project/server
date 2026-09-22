@@ -22,6 +22,29 @@
     GROUP BY m.movie_id, m.title
     ORDER BY m.movie_id ASC
   </select>
+  <select id="searchByTitle" resultType="com.kyobo.server.entity.MovieListItem">
+    SELECT m.movie_id, m.title,
+           COALESCE(STRING_AGG(DISTINCT g.genre_name, ', ' ORDER BY g.genre_name), '미분류') AS genres
+    FROM movies m
+    LEFT JOIN movie_genres mg ON m.movie_id = mg.movie_id
+    LEFT JOIN genres g ON mg.genre_id = g.genre_id
+    WHERE LOWER(m.title) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+    GROUP BY m.movie_id, m.title
+    ORDER BY m.movie_id ASC
+  </select>
+
+  <select id="searchByGenreName" resultType="com.kyobo.server.entity.MovieListItem">
+    SELECT m.movie_id, m.title,
+           COALESCE(STRING_AGG(DISTINCT all_g.genre_name, ', ' ORDER BY all_g.genre_name), '미분류') AS genres
+    FROM movies m
+    JOIN movie_genres selected_mg ON m.movie_id = selected_mg.movie_id
+    JOIN genres selected_g ON selected_mg.genre_id = selected_g.genre_id
+    LEFT JOIN movie_genres all_mg ON m.movie_id = all_mg.movie_id
+    LEFT JOIN genres all_g ON all_mg.genre_id = all_g.genre_id
+    WHERE selected_g.genre_name = #{genreName}
+    GROUP BY m.movie_id, m.title
+    ORDER BY m.movie_id ASC
+  </select>
     <insert id = "insert" useGeneratedKeys="true" keyProperty="movieId" keyColumn="movie_id">
         INSERT INTO movies (
         title,
