@@ -19,6 +19,8 @@ import com.kyobo.server.mapper.MovieGenreMapper;
 
 import com.kyobo.server.entity.Genre;
 
+import com.kyobo.server.entity.MovieDetail;
+
 public class MovieService {
     private final MovieOccupancyService movieOccupancyService = new MovieOccupancyService();
 
@@ -160,5 +162,92 @@ public class MovieService {
         }
 
         return map;
+    }
+
+    public ApiResponse<List<Movie>> findMoviesForDelete(int page) {
+        if (page < 1) {
+            return ApiResponse.fail("01", "페이지는 1 이상이어야 합니다.");
+        }
+
+        int offset = (page - 1) * 5;
+
+        try (SqlSession session =
+                     MyBatisConfig.sqlSessionFactory().openSession()) {
+
+            MovieMapper mapper = session.getMapper(MovieMapper.class);
+
+            List<Movie> movies = mapper.findMoviesForDelete(offset);
+
+            return ApiResponse.success(movies);
+
+        } catch (Exception e) {
+            return ApiResponse.error("영화 목록 조회 중 오류가 발생했습니다.");
+        }
+    }
+    public ApiResponse<MovieDetail> findMovieForDelete(int movieId) {
+        try (SqlSession session =
+                     MyBatisConfig.sqlSessionFactory().openSession()) {
+
+            MovieMapper mapper = session.getMapper(MovieMapper.class);
+
+            MovieDetail movie = mapper.findMovieDetail(movieId);
+
+            if (movie == null) {
+                return ApiResponse.fail("01", "존재하지 않는 영화입니다.");
+            }
+
+            return ApiResponse.success(movie);
+
+        } catch (Exception e) {
+            return ApiResponse.error("영화 상세 조회 중 오류가 발생했습니다.");
+        }
+    }
+
+    public ApiResponse<Void> deleteMovie(int movieId) {
+        if (movieId <= 0) {
+            return ApiResponse.fail("01", "올바른 영화 ID를 입력하세요.");
+        }
+
+        try (SqlSession session =
+                     MyBatisConfig.sqlSessionFactory().openSession()) {
+
+            MovieMapper mapper = session.getMapper(MovieMapper.class);
+
+            // 1. 선택한 영화의 장르 연결 삭제
+            mapper.deleteMovieGenres(movieId);
+
+            // 2. 영화 삭제
+            int count = mapper.deleteMovieById(movieId);
+
+            if (count != 1) {
+                session.rollback();
+                return ApiResponse.fail("01", "삭제할 영화가 없습니다.");
+            }
+
+            // 3. 두 삭제 작업을 함께 확정
+            session.commit();
+
+            return ApiResponse.success(null);
+
+        } catch (Exception e) {
+            // 외래 키 제약으로 삭제가 막힌 경우인지 확인
+            for (Throwable cause = e;
+                 cause != null;
+                 cause = cause.getCause()) {
+
+                if (cause instanceof java.sql.SQLException) {
+                    java.sql.SQLException sqlException =
+                            (java.sql.SQLException) cause;
+
+                    if ("23503".equals(sqlException.getSQLState())) {
+                        return ApiResponse.fail(
+                                "02",
+                                "상영회차나 예매 등 연결된 정보가 있어 삭제할 수 없습니다.");
+                    }
+                }
+            }
+
+            return ApiResponse.error("영화 삭제 중 오류가 발생했습니다.");
+        }
     }
 }

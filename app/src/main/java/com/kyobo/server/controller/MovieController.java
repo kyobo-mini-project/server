@@ -16,6 +16,8 @@ import com.kyobo.server.entity.Movie;
 
 import com.kyobo.server.entity.Genre;
 
+import com.kyobo.server.entity.MovieDetail;
+
 public class MovieController {
     private enum SearchResultAction { SEARCH_AGAIN, BACK, EXIT }
 
@@ -462,6 +464,182 @@ public class MovieController {
 
             if (valid) {
                 return genreIds;
+            }
+        }
+    }
+    public Integer selectMovieForDelete() {
+        int page = 1;
+
+        while (true) {
+            ApiResponse<List<Movie>> response =
+                    movieService.findMoviesForDelete(page);
+
+            if (!"00".equals(response.getStatusCode())) {
+                System.out.println(response.getStatusMessage());
+                return null;
+            }
+
+            List<Movie> movies = response.getData();
+
+            if (movies.isEmpty()) {
+                if (page == 1) {
+                    System.out.println("등록된 영화가 없습니다.");
+                    return null;
+                }
+
+                System.out.println("마지막 페이지입니다.");
+                page--;
+                continue;
+            }
+
+            System.out.println("\n===== 영화 삭제 (" + page + "페이지) =====");
+            System.out.println("영화 ID | 제목 | 개봉일");
+
+            for (Movie movie : movies) {
+                String title = movie.getTitle();
+
+                if (title == null || title.isBlank()) {
+                    title = "제목 없음";
+                } else {
+                    title = title.replaceAll("\\s+", " ");
+
+                    if (title.length() > 20) {
+                        title = title.substring(0, 20) + "…";
+                    }
+                }
+
+                System.out.printf("%d | %s | %s%n",
+                        movie.getMovieId(),
+                        title,
+                        movie.getReleaseDate() == null
+                                ? "미등록" : movie.getReleaseDate());
+            }
+
+            System.out.println("[N 다음] [P 이전] [0 뒤로가기]");
+            System.out.print("상세조회할 영화 ID: ");
+
+            if (!scanner.hasNextLine()) {
+                return null;
+            }
+
+            String input = scanner.nextLine().trim();
+
+            if ("0".equals(input)) {
+                return null;
+            }
+
+            if ("N".equalsIgnoreCase(input)) {
+                page++;
+                continue;
+            }
+
+            if ("P".equalsIgnoreCase(input)) {
+                if (page > 1) {
+                    page--;
+                } else {
+                    System.out.println("첫 페이지입니다.");
+                }
+                continue;
+            }
+
+            try {
+                int movieId = Integer.parseInt(input);
+
+                for (Movie movie : movies) {
+                    if (movie.getMovieId().equals(movieId)) {
+                        return movieId;
+                    }
+                }
+
+                System.out.println("현재 목록에 있는 영화 ID를 입력하세요.");
+
+            } catch (NumberFormatException e) {
+                System.out.println("영화 ID 또는 메뉴를 입력하세요.");
+            }
+        }
+    }
+    public void runMovieDeletion() {
+        while (true) {
+            // 1. 목록에서 영화 선택
+            Integer movieId = selectMovieForDelete();
+
+            if (movieId == null) {
+                return;
+            }
+
+            // 2. 선택한 영화 상세 조회
+            ApiResponse<MovieDetail> response =
+                    movieService.findMovieForDelete(movieId);
+
+            if (!"00".equals(response.getStatusCode())) {
+                System.out.println(response.getStatusMessage());
+                continue;
+            }
+
+            MovieDetail movie = response.getData();
+
+            // 3. 장르를 포함한 상세 정보 출력
+            System.out.println("\n===== 영화 상세 =====");
+            System.out.println("영화 ID: " + movie.getMovieId());
+            System.out.println("제목: " + movie.getTitle());
+            System.out.println("개봉일: " + movie.getReleaseDate());
+            System.out.println("관람 가능 나이: " + movie.getAgeLimit());
+            System.out.println("상영 시간: " + movie.getRunningTime() + "분");
+            System.out.println("감독: " + movie.getDirector());
+            System.out.println("장르: " +
+                    (movie.getGenres() == null || movie.getGenres().isBlank()
+                            ? "미분류" : movie.getGenres()));
+            System.out.println("소개: " + movie.getContent());
+
+            // 4. 상세 화면 메뉴
+            while (true) {
+                System.out.println("\n[1 삭제] [0 목록으로]");
+                System.out.print("선택: ");
+
+                if (!scanner.hasNextLine()) {
+                    return;
+                }
+
+                String choice = scanner.nextLine().trim();
+
+                if ("0".equals(choice)) {
+                    break;
+                }
+
+                if (!"1".equals(choice)) {
+                    System.out.println("올바른 메뉴를 입력하세요.");
+                    continue;
+                }
+
+                // 5. 최종 삭제 확인
+                System.out.println(
+                        "[" + movie.getMovieId() + "] "
+                                + movie.getTitle());
+                System.out.print("정말 삭제하시겠습니까? (Y/N): ");
+
+                if (!scanner.hasNextLine()) {
+                    return;
+                }
+
+                String confirm = scanner.nextLine().trim();
+
+                if (!"Y".equalsIgnoreCase(confirm)) {
+                    System.out.println("삭제를 취소했습니다.");
+                    continue;
+                }
+
+                // 6. Service에 삭제 요청
+                ApiResponse<Void> deleteResponse =
+                        movieService.deleteMovie(movieId);
+
+                if ("00".equals(deleteResponse.getStatusCode())) {
+                    System.out.println("영화가 삭제되었습니다.");
+                } else {
+                    System.out.println(deleteResponse.getStatusMessage());
+                }
+
+                // 성공·실패 결과를 보여준 뒤 목록을 새로 조회
+                break;
             }
         }
     }

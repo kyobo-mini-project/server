@@ -117,4 +117,24 @@ resultType="com.kyobo.server.entity.MovieDetail" >
     GROUP BY s.movie_id
   </select>
 
+    <select id="findMoviesForDelete"
+            resultType="com.kyobo.server.entity.Movie">
+        SELECT movie_id AS "movieId",
+        title,
+        release_date AS "releaseDate"
+        FROM movies
+        ORDER BY movie_id DESC
+        LIMIT 5 OFFSET #{offset}
+    </select>
+
+    <delete id="deleteMovieGenres">
+        DELETE FROM movie_genres
+        WHERE movie_id = #{movieId}
+    </delete>
+
+    <delete id="deleteMovieById">
+        DELETE FROM movies
+        WHERE movie_id = #{movieId}
+    </delete>
+
 </mapper>

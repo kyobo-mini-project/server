@@ -27,4 +27,10 @@ public interface MovieMapper {
 
     /** 영화별 유효 예매 좌석 수 (booking_status = DONE) */
     List<MovieSeatCount> findSoldSeatCounts();
+
+    List<Movie> findMoviesForDelete(@Param("offset") int offset);
+
+    int deleteMovieGenres(@Param("movieId") Integer movieId);
+
+    int deleteMovieById(@Param("movieId") Integer movieId);
 }

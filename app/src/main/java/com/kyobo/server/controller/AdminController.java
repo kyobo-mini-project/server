@@ -93,7 +93,29 @@ public class AdminController {
 
     private void manageMovies() {
         MovieController movieController = new MovieController(scanner);
-        movieController.runMovieRegistration();
+
+        while (true) {
+            System.out.println("\n===== 영화 관리 =====");
+            System.out.println("[1 영화 등록] [2 영화 삭제] [0 뒤로가기]");
+
+            String choice = readLine("선택: ").trim();
+
+            switch (choice) {
+                case "1":
+                    movieController.runMovieRegistration();
+                    break;
+
+                case "2":
+                    movieController.runMovieDeletion();
+                    break;
+
+                case "0":
+                    return;
+
+                default:
+                    System.out.println("올바른 번호를 입력하세요.");
+            }
+        }
     }
 
     private void manageScreens(Admin admin) {
