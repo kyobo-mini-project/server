@@ -1,5 +1,10 @@
 package com.kyobo.server.entity;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class Booking {
     private Integer bookingId;
     private Integer userId;
@@ -12,63 +17,4 @@ public class Booking {
     private String roomName;
     private String seatCodes;
     private Integer floor;
-
-    public Integer getBookingId() {
-        return bookingId;
-    }
-
-    public void setBookingId(Integer bookingId) {
-        this.bookingId = bookingId;
-    }
-
-    public Integer getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Integer userId) {
-        this.userId = userId;
-    }
-
-    public Integer getMovieId() {
-        return movieId;
-    }
-
-    public void setMovieId(Integer movieId) {
-        this.movieId = movieId;
-    }
-
-    public Integer getScreeningId() {
-        return screeningId;
-    }
-
-    public void setScreeningId(Integer screeningId) {
-        this.screeningId = screeningId;
-    }
-    public String getMovieTitle() {
-        return movieTitle;
-    }
-
-    public java.time.LocalDate getScreeningDate() {
-        return screeningDate;
-    }
-
-    public java.time.LocalTime getStartTime() {
-        return startTime;
-    }
-
-    public String getCinemaName() {
-        return cinemaName;
-    }
-
-    public String getRoomName() {
-        return roomName;
-    }
-
-    public String getSeatCodes() {
-        return seatCodes;
-    }
-
-    public Integer getFloor() {
-        return floor;
-    }
 }
