@@ -50,6 +50,14 @@ public class BookingService {
      * 이미 다른 예매가 선점한 좌석이면(booked_seats UNIQUE 제약 위반) 커밋하지 않고 실패로 응답한다.
      */
     public ApiResponse<Void> createBooking(int userId, int movieId, int screeningId, List<Seat> selectedSeats) {
+        if (selectedSeats == null || selectedSeats.isEmpty()
+                || selectedSeats.stream().anyMatch(s -> s == null || s.getSeatId() == null)) {
+            return ApiResponse.fail("04", "좌석을 선택해 주세요.");
+        }
+        List<Integer> seatIds = selectedSeats.stream().map(Seat::getSeatId).distinct().sorted().toList();
+        if (seatIds.size() != selectedSeats.size()) {
+            return ApiResponse.fail("04", "같은 좌석을 중복 선택할 수 없습니다.");
+        }
         try (SqlSession session = MyBatisConfig.sqlSessionFactory().openSession()) {
             BookingMapper bookingMapper = session.getMapper(BookingMapper.class);
             BookedSeatMapper bookedSeatMapper = session.getMapper(BookedSeatMapper.class);
@@ -59,6 +67,15 @@ public class BookingService {
             booking.setMovieId(movieId);
             booking.setScreeningId(screeningId);
             bookingMapper.insert(booking);
+
+            // 기존 상영관 변경의 bookings 잠금보다 먼저 좌석을 잠그지 않는다.
+            // 좌석 검증 실패 시 위 예매 INSERT도 함께 취소한다.
+            List<Seat> available = session.getMapper(SeatMapper.class)
+                    .findBookableForUpdate(screeningId, seatIds);
+            if (available.size() != seatIds.size()) {
+                session.rollback();
+                return ApiResponse.fail("04", "사용할 수 없는 좌석이 있습니다. 다시 선택해 주세요.");
+            }
 
             for (Seat seat : selectedSeats) {
                 BookedSeat bookedSeat = new BookedSeat();

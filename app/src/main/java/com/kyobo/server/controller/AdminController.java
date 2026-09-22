@@ -17,6 +17,7 @@ import com.kyobo.server.entity.Movie;
 import com.kyobo.server.entity.Room;
 import com.kyobo.server.entity.RoomAdmin;
 import com.kyobo.server.entity.Screening;
+import com.kyobo.server.entity.Seat;
 import com.kyobo.server.service.AdminService;
 import com.kyobo.server.service.ScreeningService;
 
@@ -117,14 +118,14 @@ public class AdminController {
                 }
 
                 String menu = readLine(
-                        "[1. 상태 수정] [0. 뒤로가기] : ").trim();
+                        "[1. 상태 수정] [2. 좌석 관리] [0. 뒤로가기] : ").trim();
 
                 // 관리자 메뉴로 돌아가기
                 if ("0".equals(menu)) {
                     return;
                 }
 
-                if (!"1".equals(menu)) {
+                if (!"1".equals(menu) && !"2".equals(menu)) {
                     System.out.println("올바른 번호를 입력하세요.");
                     continue;
                 }
@@ -135,7 +136,7 @@ public class AdminController {
                 }
 
                 int roomId = Integer.parseInt(
-                        readLine("수정할 관 ID (0: 취소): ").trim());
+                        readLine("상영관 ID (0: 취소): ").trim());
 
                 if (roomId == 0) {
                     continue;
@@ -144,6 +145,11 @@ public class AdminController {
                 if (rooms.stream().noneMatch(
                         room -> room.getRoomId().equals(roomId))) {
                     System.out.println("목록에 있는 관 ID를 입력하세요.");
+                    continue;
+                }
+
+                if ("2".equals(menu)) {
+                    manageSeats(admin, roomId);
                     continue;
                 }
 
@@ -160,74 +166,131 @@ public class AdminController {
                 }
 
                 String confirm = readLine(
-                        "변경하시겠습니까? (Y/N): ").trim();
+                        "\n변경하시겠습니까? (Y/N): ").trim(); //공간 띄우기
 
                 if (!"Y".equalsIgnoreCase(confirm)) {
                     continue;
                 }
 
-                AdminService.RoomResult result = adminService.changeRoom(
-                        admin.getCinemaId(), roomId, "1".equals(choice));
+                AdminService.RoomChangeResult result =
+                        adminService.changeRoom(
+                                admin.getCinemaId(),
+                                roomId,
+                                "1".equals(choice)
+                        );
 
-                System.out.println(result.message());
+                switch (result.status()) {
 
-
-                Map<Integer, List<RoomAdmin>> seatsByBooking = new LinkedHashMap<>();
-
-                for (RoomAdmin seat : result.seats()) {
-                    seatsByBooking
-                            .computeIfAbsent(seat.getBookingId(), key -> new ArrayList<>())
-                            .add(seat);
-                }
-
-
-                Map<Integer, List<RoomAdmin>> bookingsByUser = new LinkedHashMap<>();
-
-                for (RoomAdmin booking : result.buyers()) {
-                    bookingsByUser
-                            .computeIfAbsent(booking.getUserId(), key -> new ArrayList<>())
-                            .add(booking);
-                }
-
-                for (List<RoomAdmin> bookings : bookingsByUser.values()) {
-                    RoomAdmin buyer = bookings.get(0);
-                    Map<Integer, List<String>> seatsByScreening = new LinkedHashMap<>();
-                    int seatCount = 0;
-
-                    for (RoomAdmin booking : bookings) {
-                        List<RoomAdmin> seats = seatsByBooking.getOrDefault(
-                                booking.getBookingId(), List.of());
-
-                        List<String> labels = seatsByScreening.computeIfAbsent(
-                                booking.getScreeningId(), key -> new ArrayList<>());
-
-                        if (seats.isEmpty()) {
-                            labels.add("좌석 정보 확인 필요");
-                            continue;
-                        }
-
-                        for (RoomAdmin seat : seats) {
-                            seatCount++;
-
-                            if (seat.getRowName() == null || seat.getColNum() == null) {
-                                labels.add("좌석 정보 확인 필요");
-                            } else {
-                                labels.add(seat.getRowName().trim() + seat.getColNum());
-                            }
-                        }
+                    case NOT_FOUND -> {
+                        System.out.println();
+                        System.out.println("해당 지점의 상영관이 아닙니다.");
                     }
 
-                    System.out.printf(
-                            "아이디: %s | 전화번호: %s | 예매 좌석: %d개%n",
-                            buyer.getLoginId(), buyer.getPhoneNumber(), seatCount);
+                    case SAME_STATUS -> {
+                        System.out.println();
+                        System.out.println("이미 같은 상태입니다.");
+                    }
 
-                    System.out.println("좌석:");
+                    case SUCCESS -> {
+                        System.out.println();
+                        System.out.println("반영되었습니다.");
+                    }
 
-                    seatsByScreening.forEach((screeningId, seats) ->
-                            System.out.println(
-                                    "회차 " + screeningId + ": " + String.join(", ", seats)));
+                    case HAS_BOOKINGS -> {
+                        System.out.println();
+                        System.out.println(
+                                "예매자가 있어 운영 불가로 변경할 수 없습니다."
+                        );
 
-                    System.out.println();
+                        Map<Integer, List<RoomAdmin>> seatsByBooking =
+                                new LinkedHashMap<>();
+
+                        for (RoomAdmin seat : result.seats()) {
+                            seatsByBooking
+                                    .computeIfAbsent(
+                                            seat.getBookingId(),
+                                            key -> new ArrayList<>()
+                                    )
+                                    .add(seat);
+                        }
+
+                        Map<Integer, List<RoomAdmin>> bookingsByUser =
+                                new LinkedHashMap<>();
+
+                        for (RoomAdmin booking : result.buyers()) {
+                            bookingsByUser
+                                    .computeIfAbsent(
+                                            booking.getUserId(),
+                                            key -> new ArrayList<>()
+                                    )
+                                    .add(booking);
+                        }
+
+                        for (List<RoomAdmin> bookings : bookingsByUser.values()) {
+                            RoomAdmin buyer = bookings.get(0);
+
+                            Map<Integer, List<String>> seatsByScreening =
+                                    new LinkedHashMap<>();
+
+                            int seatCount = 0;
+
+                            for (RoomAdmin booking : bookings) {
+                                List<RoomAdmin> seats =
+                                        seatsByBooking.getOrDefault(
+                                                booking.getBookingId(),
+                                                List.of()
+                                        );
+
+                                List<String> labels =
+                                        seatsByScreening.computeIfAbsent(
+                                                booking.getScreeningId(),
+                                                key -> new ArrayList<>()
+                                        );
+
+                                if (seats.isEmpty()) {
+                                    labels.add("좌석 정보 확인 필요");
+                                    continue;
+                                }
+
+                                for (RoomAdmin seat : seats) {
+                                    seatCount++;
+
+                                    if (seat.getRowName() == null
+                                            || seat.getColNum() == null) {
+
+                                        labels.add("좌석 정보 확인 필요");
+
+                                    } else {
+                                        labels.add(
+                                                seat.getRowName().trim()
+                                                        + seat.getColNum()
+                                        );
+                                    }
+                                }
+                            }
+
+                            System.out.printf(
+                                    "아이디: %s | 전화번호: %s | 예매 좌석: %d개%n",
+                                    buyer.getLoginId(),
+                                    buyer.getPhoneNumber(),
+                                    seatCount
+                            );
+
+                            System.out.println("좌석:");
+
+                            seatsByScreening.forEach(
+                                    (screeningId, seats) ->
+                                            System.out.println(
+                                                    "회차 "
+                                                            + screeningId
+                                                            + ": "
+                                                            + String.join(", ", seats)
+                                            )
+                            );
+
+                            System.out.println();
+                        }
+                    }
                 }
 
             } catch (NumberFormatException e) {
@@ -238,6 +301,188 @@ public class AdminController {
                 return;
             }
         }
+    }
+
+    private void manageSeats(Admin admin, int roomId) {
+        while (true) {
+            List<Seat> seats =
+                    adminService.getRoomSeats(admin.getCinemaId(), roomId);
+
+            System.out.println("\n[상영관 ID " + roomId + "] 좌석 관리");
+
+            if (seats.isEmpty()) {
+                System.out.println("등록된 좌석이 없습니다.");
+                return;
+            }
+
+            printAdminSeatMap(seats);
+
+            String input =
+                    readLine("수정할 좌석 (예: A1, 0: 뒤로가기): ").trim();
+
+            if ("0".equals(input)) {
+                return;
+            }
+
+            Seat selectedSeat = seats.stream()
+                    .filter(seat ->
+                            (seat.getRowName().trim() + seat.getColNum())
+                                    .equalsIgnoreCase(input))
+                    .findFirst()
+                    .orElse(null);
+
+            if (selectedSeat == null) {
+                System.out.println(
+                        "배치도에 있는 좌석명을 입력하세요. (예: A1)"
+                );
+                continue;
+            }
+
+            String choice =
+                    readLine(
+                            "[1. 사용 가능] [2. 사용 불가] [0. 취소]: "
+                    ).trim();
+
+            if ("0".equals(choice)) {
+                continue;
+            }
+
+            if (!"1".equals(choice) && !"2".equals(choice)) {
+                System.out.println("올바른 번호를 입력하세요.");
+                continue;
+            }
+
+            String confirm =
+                    readLine("\n변경하시겠습니까? (Y/N): ").trim();
+
+            if (!"Y".equalsIgnoreCase(confirm)) {
+                continue;
+            }
+
+            AdminService.SeatChangeResult result =
+                    adminService.changeSeat(
+                            admin.getCinemaId(),
+                            roomId,
+                            selectedSeat.getSeatId(),
+                            "1".equals(choice)
+                    );
+
+            switch (result.status()) {
+
+                case NOT_FOUND -> {
+                    System.out.println(
+                            "담당 지점·상영관의 좌석이 아닙니다."
+                    );
+                }
+
+                case SAME_STATUS -> {
+                    System.out.println(
+                            "이미 같은 상태입니다."
+                    );
+                }
+
+                case HAS_BOOKINGS -> {
+                    printSeatBookings(result.bookings());
+                    if (!askContinueSeatManagement()) {
+                        return;
+                    }
+                }
+
+                case SUCCESS -> {
+                    System.out.println(); // 공간 띄우기
+                    System.out.println("반영되었습니다.");
+
+                    List<Seat> updatedSeats =
+                            adminService.getRoomSeats(
+                                    admin.getCinemaId(),
+                                    roomId
+                            );
+
+                    printAdminSeatMap(updatedSeats);
+
+                    if (!askContinueSeatManagement()) {
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    private void printSeatBookings(List<RoomAdmin> bookings) {
+        System.out.println(); // 공간 띄우기
+
+        System.out.println(
+                "진행 중이거나 예정된 상영에 예매가 있어 변경할 수 없습니다."
+        );
+
+        for (RoomAdmin booking : bookings) {
+            System.out.printf(
+                    "예매 번호: %d | 예매자: %s (회원 번호: %d)%n",
+                    booking.getBookingId(),
+                    displayText(booking.getLoginId()),
+                    booking.getUserId()
+            );
+
+            System.out.printf(
+                    "상영회차: %d | 영화: %s | 상영일시: %s %s%n",
+                    booking.getScreeningId(),
+                    displayText(booking.getMovieTitle()),
+                    booking.getScreeningDate(),
+                    formatTime(booking.getStartTime())
+            );
+        }
+    }
+
+    private boolean askContinueSeatManagement() {
+        while (true) {
+            String choice =
+                    readLine("\n[1. 좌석 관리하기] [0. 뒤로가기]: ").trim();
+
+            if ("1".equals(choice)) {
+                return true;
+            }
+
+            if ("0".equals(choice)) {
+                return false;
+            }
+
+            System.out.println("올바른 번호를 입력하세요.");
+        }
+    }
+
+    private void printAdminSeatMap(List<Seat> seats) {
+        Map<String, Map<Integer, Seat>> rows = new java.util.TreeMap<>();
+        int lastColumn = 0;
+        int cellWidth = 6;
+        int rowWidth = 3;
+        for (Seat seat : seats) {
+            String row = seat.getRowName().trim();
+            rows.computeIfAbsent(row, key -> new java.util.TreeMap<>())
+                    .put(seat.getColNum(), seat);
+            lastColumn = Math.max(lastColumn, seat.getColNum());
+            cellWidth = Math.max(cellWidth, displayWidth(row + seat.getColNum()) + 4);
+            rowWidth = Math.max(rowWidth, displayWidth(row) + 2);
+        }
+
+        System.out.println("\n                  [ 스크린 ]");
+        System.out.println("■ 사용 가능   □ 사용 불가      ※ 회차별 예매 여부와는 별개입니다.");
+        System.out.print(" ".repeat(rowWidth));
+        for (int column = 1; column <= lastColumn; column++) {
+            System.out.print(padDisplay(String.valueOf(column), cellWidth));
+        }
+        System.out.println();
+        for (Map.Entry<String, Map<Integer, Seat>> row : rows.entrySet()) {
+            System.out.print(padDisplay(row.getKey(), rowWidth));
+            for (int column = 1; column <= lastColumn; column++) {
+                Seat seat = row.getValue().get(column);
+                String cell = seat == null ? "" :
+                        (Boolean.TRUE.equals(seat.getActive()) ? "■" : "□")
+                                + row.getKey() + seat.getColNum();
+                System.out.print(padDisplay(cell, cellWidth));
+            }
+            System.out.println();
+        }
+        System.out.println();
     }
 
     private void manageShowtimes(Admin admin) {
